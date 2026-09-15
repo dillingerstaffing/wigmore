@@ -6,6 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
+<meta name="build-version" content="v20260915-1439">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -214,6 +215,11 @@ footer{border-top:1px solid var(--line);margin-top:auto}
 /* ---------- mobile: fullscreen canvas, bottom sheet ---------- */
 .hint-mob{display:none}
 /* embedded canvas: gesture contract + callout */
+.mode-ctl{position:absolute;left:12px;bottom:12px;z-index:5;display:flex;background:rgba(12,15,13,.85);
+  border:1px solid var(--line-soft);border-radius:8px;overflow:hidden}
+.mode-ctl button{border:0;background:transparent;color:var(--muted);font-family:var(--mono);
+  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:10px 13px;cursor:pointer}
+.mode-ctl button.on{background:var(--acc);color:#0c0f0d}
 .canvas-hint{position:absolute;left:12px;top:10px;z-index:5;font-size:10px;letter-spacing:.06em;color:var(--dim);
   background:rgba(12,15,13,.8);border:1px solid var(--line-soft);border-radius:2px;padding:6px 10px;
   pointer-events:none;display:none}
@@ -288,7 +294,8 @@ footer{border-top:1px solid var(--line);margin-top:auto}
           <div class="co-tx"></div>
           <div class="co-row"><button class="btn sm ghost" id="co-key">Key list &#8595;</button></div>
         </div>
-        <div class="zoom-ctl">
+        <div class="mode-ctl" role="group" aria-label="Canvas touch mode"><button id="mode-explore" class="on">Explore</button><button id="mode-scroll">Scroll</button></div>
+    <div class="zoom-ctl">
           <button id="z-in" aria-label="Zoom in">+</button>
           <button id="z-out" aria-label="Zoom out">&minus;</button>
           <button id="z-fit" aria-label="Fit to view">&#9712;</button>
@@ -1046,6 +1053,18 @@ document.getElementById("btn-edit").onclick=()=>{
   document.getElementById("z-in").onclick=()=>{const p=zc();zoomAt(1.25,p[0],p[1]);};
   document.getElementById("z-out").onclick=()=>{const p=zc();zoomAt(0.8,p[0],p[1]);};
   document.getElementById("z-fit").onclick=()=>fitView(true);
+(function(){
+  var box=canvasBox, hint=document.querySelector(".canvas-hint");
+  var bE=document.getElementById("mode-explore"), bS=document.getElementById("mode-scroll");
+  var HINT_E="Drag to pan &middot; pinch to zoom &middot; tap a shape";
+  var HINT_S="Drag up/down to scroll the page &middot; Explore mode works the chart";
+  function setMode(explore){
+    box.style.touchAction=explore?"none":"pan-y";
+    bE.classList.toggle("on",explore); bS.classList.toggle("on",!explore);
+    if(hint) hint.innerHTML=explore?HINT_E:HINT_S;
+  }
+  bE.onclick=()=>setMode(true); bS.onclick=()=>setMode(false);
+})();
 })();
 document.getElementById("btn-share").onclick=()=>{
   shareURL(currentData(),url=>{
@@ -1462,6 +1481,28 @@ async function boot(){
   go("library");
 }
 boot();
+</script>
+<script>
+/* Auto-update: reload once when a newer build is published. */
+(function(){
+  var cur=(document.querySelector('meta[name="build-version"]')||{}).content;
+  if(!cur) return;
+  var checked=false, reloaded=false;
+  function check(){
+    if(document.visibilityState!=="visible"||checked||reloaded) return;
+    checked=true;
+    fetch(location.href.split("?")[0]+"?vcheck="+Date.now(),{cache:"no-store"})
+      .then(function(r){return r.text();})
+      .then(function(html){
+        var m=html.match(/<meta name="build-version" content="([^"]+)"/);
+        if(m&&m[1]!==cur){reloaded=true;location.reload();}
+        else checked=false;
+      })
+      .catch(function(){checked=false;});
+  }
+  document.addEventListener("visibilitychange",check);
+  setTimeout(check,2500);
+})();
 </script>
 </body>
 </html>
