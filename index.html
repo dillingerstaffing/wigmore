@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260915-1502">
+<meta name="build-version" content="v20260915-1509">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -831,8 +831,10 @@ document.getElementById("lib-new").onclick=()=>{
 /* ---------- chart view ---------- */
 const svg=document.getElementById("svg"), canvasBox=document.getElementById("canvas");
 function svgSize(){
-  const r=svg.getBoundingClientRect();
-  return [r.width||800, r.height||520];
+  const r=canvasBox.getBoundingClientRect();
+  if(r.width>1&&r.height>1) return [r.width,r.height];
+  const s=svg.getBoundingClientRect();
+  return [s.width||800, s.height||520];
 }
 var USE_TOUCH=("ontouchstart" in window)||navigator.maxTouchPoints>0;
 let chartGeom=null;
