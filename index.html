@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260915-1509">
+<meta name="build-version" content="v20260915-1515">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -87,7 +87,7 @@ input[type=text],input[type=url],textarea,select{width:100%;background:var(--pan
   color:var(--ink);font-family:var(--mono);font-size:13px;padding:10px 12px;border-radius:var(--r)}
 input:focus,textarea:focus,select:focus{border-color:var(--dim);outline:none}
 textarea{min-height:76px;resize:vertical}
-label.f{display:block;margin:14px 0 6px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.f{display:block;margin:14px 0 6px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .hint{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5}
 .checks{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px}
 .checks label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer}
@@ -242,6 +242,19 @@ footer{border-top:1px solid var(--line);margin-top:auto}
   .chart-bar{gap:8px}
   .chart-bar .sp{display:none}
   .chart-bar select.inline{flex:1 1 100%;min-width:0}
+  /* compact header: brand + 4 tabs must fit 360px with zero sideways panning */
+  .hd-in{padding:0 12px;gap:8px}
+  .brand{gap:8px}
+  .brand img{width:24px;height:24px}
+  .wordmark{font-size:12px;letter-spacing:.14em}
+  .wordmark small{display:none}
+  nav.tabs{flex:1;min-width:0}
+  nav.tabs button{padding:20px 6px;font-size:10px;letter-spacing:.1em}
+  nav.tabs button.on::after{left:6px;right:6px}
+  /* shape picker: compact selector cards on phones, full guidance lives on Schema */
+  .shape-opt{padding:10px}
+  .shape-opt .sd{display:none}
+  .shape-opt .sn{margin:6px 0 0}
   input[type=text],input[type=url],textarea,select{font-size:16px}
   .panel{padding:16px}
   .stats div{padding:8px 2px}
