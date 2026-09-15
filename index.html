@@ -114,7 +114,7 @@ label.f{display:block;margin:14px 0 6px;font-size:10px;letter-spacing:.2em;text-
 .chart-bar .sp{flex:1}
 select.inline{width:auto;padding:8px 10px;font-size:12px}
 .chart-wrap{display:grid;grid-template-columns:1fr 330px;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel2)}
-.canvas-box{position:relative;min-height:520px;height:62vh;touch-action:none;cursor:grab}
+.canvas-box{position:relative;min-height:520px;height:62vh;touch-action:pan-y;cursor:grab}
 .canvas-box:active{cursor:grabbing}
 .canvas-box svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .grid-dot{fill:#1a201b}
@@ -213,33 +213,26 @@ footer{border-top:1px solid var(--line);margin-top:auto}
 
 /* ---------- mobile: fullscreen canvas, bottom sheet ---------- */
 .hint-mob{display:none}
-.sheet-handle{display:none}
+/* embedded canvas: gesture contract + callout */
+.canvas-hint{position:absolute;left:12px;top:10px;z-index:5;font-size:10px;letter-spacing:.06em;color:var(--dim);
+  background:rgba(12,15,13,.8);border:1px solid var(--line-soft);border-radius:2px;padding:6px 10px;
+  pointer-events:none;display:none}
+.callout{position:absolute;left:12px;right:70px;bottom:12px;z-index:6;background:var(--panel);
+  border:1px solid var(--line);border-left:2px solid var(--acid);border-radius:var(--r);padding:12px 34px 12px 14px}
+.callout[hidden]{display:none}
+.co-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--acid);margin-bottom:4px}
+.co-tx{font-size:12.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.co-row{display:flex;gap:8px;margin-top:10px}
+.co-x{position:absolute;top:4px;right:6px;background:none;border:0;color:var(--dim);font-size:18px;line-height:1;padding:4px}
+.co-x:hover{color:var(--ink)}
+.keylist li.flash{animation:kflash 1.4s ease-out}
+@keyframes kflash{0%{background:rgba(184,243,75,.18)}100%{background:transparent}}
 @media (max-width:760px){
-  body.chart-open{overflow:hidden}
-  body.chart-open footer{display:none}
-  body.chart-open main{padding:12px;max-width:none}
-  #v-chart.on{display:flex;flex-direction:column;height:calc(100vh - 84px);height:calc(100dvh - 84px)}
   #v-chart .hint-desk{display:none}
   #v-chart .hint-mob{display:block;margin-top:8px}
-  .chart-bar{gap:8px;margin-bottom:10px}
+  .canvas-hint{display:block}
+  .chart-bar{gap:8px}
   .chart-bar select.inline{flex:1;min-width:0}
-  .chart-bar .btn.sm{padding:7px 10px}
-  #chart-stats{margin-bottom:10px}
-  #chart-stats div{padding:8px 6px}
-  #chart-stats b{font-size:16px}
-  .chart-wrap{position:relative;display:block;flex:1;min-height:0}
-  .canvas-box{position:absolute;inset:0;height:auto;min-height:0}
-  .zoom-ctl{bottom:118px}
-  .side{position:absolute;left:0;right:0;bottom:0;z-index:10;border-left:0;border-top:1px solid var(--line);
-    background:var(--panel);border-radius:10px 10px 0 0;max-height:none;min-height:0;
-    box-shadow:0 -10px 34px rgba(0,0,0,.5);transition:height .22s ease-out}
-  .side.notrans{transition:none}
-  .sheet-handle{display:flex;align-items:center;justify-content:center;height:30px;flex:none;
-    touch-action:none;cursor:grab}
-  .sheet-handle::before{content:"";width:46px;height:4px;border-radius:2px;background:var(--dim)}
-  .side-tabs{flex:none}
-  .side-body{padding:14px 16px}
-  .share-banner{top:8px}
 }
 </style>
 </head>
@@ -288,6 +281,13 @@ footer{border-top:1px solid var(--line);margin-top:auto}
     <div class="chart-wrap">
       <div class="canvas-box" id="canvas">
         <svg id="svg" role="img" aria-label="Wigmore chart"></svg>
+        <div class="canvas-hint">Drag sideways to pan &middot; pinch to zoom &middot; tap a shape</div>
+        <div class="callout" id="callout" hidden>
+          <button class="co-x" id="co-x" aria-label="Dismiss">&times;</button>
+          <div class="co-tag"></div>
+          <div class="co-tx"></div>
+          <div class="co-row"><button class="btn sm ghost" id="co-key">Key list &#8595;</button></div>
+        </div>
         <div class="zoom-ctl">
           <button id="z-in" aria-label="Zoom in">+</button>
           <button id="z-out" aria-label="Zoom out">&minus;</button>
@@ -295,7 +295,6 @@ footer{border-top:1px solid var(--line);margin-top:auto}
         </div>
       </div>
       <aside class="side">
-        <div class="sheet-handle" id="sheet-handle" aria-hidden="true"></div>
         <div class="side-tabs">
           <button data-side="keylist" class="on">Key list</button>
           <button data-side="detail">Detail</button>
@@ -304,7 +303,7 @@ footer{border-top:1px solid var(--line);margin-top:auto}
       </aside>
     </div>
     <p class="hint hint-desk" style="margin-top:10px">Drag to pan, scroll or pinch to zoom. Click a shape for its key-list entry. Keyboard: + / &minus; zoom, 0 fit, Esc deselect.</p>
-    <p class="hint hint-mob">Drag to pan &middot; pinch to zoom &middot; tap a shape for its entry &middot; double-tap to zoom in.</p>
+    <p class="hint hint-mob">Tap a shape for its entry &middot; drag sideways to pan &middot; pinch to zoom &middot; scroll vertically for the page.</p>
   </section>
 
   <!-- BUILD -->
@@ -707,7 +706,7 @@ function edgePath(a,b,l){
 const S = {
   view:"library", chartId:null, shared:null, sharedSaved:false,
   selNode:null, selLink:null, sideTab:"keylist",
-  pan:{x:0,y:0,k:1}, editDraft:null, sheet:"peek"
+  pan:{x:0,y:0,k:1}, editDraft:null
 };
 let suppressClick=false;
 function isMobileView(){ return window.matchMedia("(max-width:760px)").matches; }
@@ -738,7 +737,6 @@ function saveDraftToLib(){
 /* ---------- router ---------- */
 function go(view, arg){
   S.view=view;
-  document.body.classList.toggle("chart-open", view==="chart");
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
   document.getElementById("v-"+view).classList.add("on");
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.view===view));
@@ -829,7 +827,7 @@ function openChart(id){
     const o=document.createElement("option"); o.value="__shared"; o.textContent=currentName(); o.selected=true;
     sw.appendChild(o);
   }
-  renderShareSlot(); drawChart(); renderSide(); renderStats(); setSheet("peek",true);
+  renderShareSlot(); drawChart(); renderSide(); renderStats(); hideCallout();
   if(!fromShared) localStorage.setItem(LS_LAST,id);
   fitView(false);
 }
@@ -863,9 +861,8 @@ function renderShareSlot(){
 function drawChart(){
   const d=currentData();
   chartGeom=renderChart(svg,d,{sel:S.selNode,
-    onNode:(n)=>selectNode(n.id),
-    onLink:(l)=>{S.selLink=l.id;S.selNode=null;S.sideTab="detail";drawChart();renderSide();
-      if(isMobileView()) setSheet("half");}});
+    onNode:(n)=>selectNode(n.id,{callout:true}),
+    onLink:(l)=>{S.selLink=l.id;S.selNode=null;S.sideTab="detail";drawChart();renderSide();hideCallout();}});
   applyPan();
 }
 function renderStats(){
@@ -887,7 +884,7 @@ function renderSide(){
   if(S.sideTab==="keylist"){
     const ol=document.createElement("ol"); ol.className="keylist";
     d.nodes.forEach(n=>{
-      const li=document.createElement("li");
+      const li=document.createElement("li"); li.id="key-"+n.id;
       const kn=document.createElement("span"); kn.className="kn"; kn.textContent=num(d,n);
       const ks=document.createElement("span"); ks.className="ks"; ks.textContent=shapeLabel(n);
       const tx=document.createElement("span"); tx.textContent=nodeText(n);
@@ -933,8 +930,8 @@ function renderSide(){
         nav.style.cssText="display:flex;gap:8px;margin-top:16px";
         const mkb=(t,dis,fn)=>{ const b=document.createElement("button");
           b.className="btn sm ghost"; b.textContent=t; b.disabled=dis; b.onclick=fn; return b; };
-        nav.appendChild(mkb("\u2190 Prev",idx<=0,()=>selectNode(d.nodes[idx-1].id)));
-        nav.appendChild(mkb("Next \u2192",idx>=d.nodes.length-1,()=>selectNode(d.nodes[idx+1].id)));
+        nav.appendChild(mkb("\u2190 Prev",idx<=0,()=>{const nn=d.nodes[idx-1];selectNode(nn.id,{callout:true});panToNode(nn);}));
+        nav.appendChild(mkb("Next \u2192",idx>=d.nodes.length-1,()=>{const nn=d.nodes[idx+1];selectNode(nn.id,{callout:true});panToNode(nn);}));
         wrap.appendChild(nav);
       }
     }else if(S.selLink){
@@ -965,7 +962,7 @@ document.querySelectorAll(".side-tabs button").forEach(b=>b.addEventListener("cl
 svg.addEventListener("click",()=>{
   if(suppressClick){ suppressClick=false; return; }
   if(S.selNode||S.selLink){ S.selNode=S.selLink=null; drawChart(); renderSide(); }
-  if(isMobileView()) setSheet("peek");
+  hideCallout();
 });
 
 /* pan / zoom */
@@ -979,8 +976,7 @@ function fitNodes(ns){
   const xs=ns.map(n=>n._x), ys=ns.map(n=>n._y);
   const x0=Math.min.apply(null,xs)-90, x1=Math.max.apply(null,xs)+90;
   const y0=Math.min.apply(null,ys)-80, y1=Math.max.apply(null,ys)+90;
-  const mob=isMobileView();
-  const W=svg.clientWidth||800, H=(svg.clientHeight||520)-(mob?110:0);
+  const W=svg.clientWidth||800, H=svg.clientHeight||520;
   const k=Math.min(W/(x1-x0), H/(y1-y0), 1.6);
   S.pan.k=k; S.pan.x=W/2-(x0+x1)/2*k; S.pan.y=H/2-(y0+y1)/2*k;
   applyPan();
@@ -1007,40 +1003,34 @@ function zoomToNode(n){
   S.pan.k=k2; S.pan.x=W/2-n._x*k2; S.pan.y=H*0.40-n._y*k2;
   applyPan();
 }
-function selectNode(id, pan){
-  S.selNode=id; S.selLink=null; S.sideTab="detail"; drawChart(); renderSide();
-  if(isMobileView()){
+function selectNode(id, opts){
+  opts=opts||{};
+  S.selNode=id; S.selLink=null;
+  const mob=isMobileView();
+  if(!(mob&&opts.callout)) S.sideTab="detail";
+  drawChart(); renderSide();
+  if(mob&&opts.callout){
     const d=currentData(), n=d.nodes.find(x=>x.id===id);
-    if(n&&pan!==false) panToNode(n);
-    setSheet("half");
+    if(n) showCallout(n,d);
   }
 }
-/* bottom sheet */
-function sheetHeights(){
-  const wrap=document.querySelector(".chart-wrap");
-  const H=wrap?wrap.clientHeight:600;
-  return {peek:104, half:Math.round(H*0.48), full:Math.round(H*0.94)};
+function showCallout(n,d){
+  const c=document.getElementById("callout"); if(!c) return;
+  c.querySelector(".co-tag").textContent="#"+num(d,n)+" \u00B7 "+shapeLabel(n);
+  c.querySelector(".co-tx").textContent=nodeText(n);
+  c.hidden=false;
 }
-function setSheet(st, instant){
-  S.sheet=st;
-  const side=document.querySelector(".side"); if(!side) return;
-  if(!isMobileView()){ side.style.height=""; return; }
-  const h=sheetHeights();
-  if(instant) side.classList.add("notrans");
-  side.style.height=h[st]+"px";
-  if(instant) requestAnimationFrame(()=>{ const sd=document.querySelector(".side"); if(sd) sd.classList.remove("notrans"); });
-}
-function zoomAt(f, cx, cy){
-  const k2=Math.min(4,Math.max(.25,S.pan.k*f));
-  const s=k2/S.pan.k;
-  S.pan.x=cx-(cx-S.pan.x)*s; S.pan.y=cy-(cy-S.pan.y)*s; S.pan.k=k2;
-  applyPan();
-}
-document.getElementById("z-in").onclick=()=>zoomAt(1.25,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
-document.getElementById("z-out").onclick=()=>zoomAt(.8,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
-document.getElementById("z-fit").onclick=()=>fitView(true);
+function hideCallout(){ const c=document.getElementById("callout"); if(c) c.hidden=true; }
 document.getElementById("btn-fit").onclick=()=>fitView(true);
 document.getElementById("btn-frame").onclick=()=>frameSelection();
+document.getElementById("co-x").onclick=(e)=>{ e.stopPropagation(); hideCallout(); };
+document.getElementById("co-key").onclick=()=>{
+  S.sideTab="keylist"; renderSide();
+  const side=document.querySelector(".side");
+  if(side) side.scrollIntoView({behavior:"smooth",block:"nearest"});
+  const li=document.getElementById("key-"+S.selNode);
+  if(li){ li.classList.add("flash"); setTimeout(()=>li.scrollIntoView({behavior:"smooth",block:"nearest"}),200); }
+};
 document.getElementById("btn-edit").onclick=()=>{
   if(S.shared){ alert("Save the shared chart to your collection before editing it."); return; }
   go("build",S.chartId);
@@ -1115,9 +1105,18 @@ document.getElementById("btn-share").onclick=()=>{
       }
       drag=null;
     }
+    if(pts.size===1&&!pinch){
+      const rp=[...pts.entries()][0], r=svg.getBoundingClientRect();
+      drag={p:[rp[1].x-r.left,rp[1].y-r.top],x:S.pan.x,y:S.pan.y,moved:true,id:rp[0]};
+    }
   };
   svg.addEventListener("pointerup",endPt);
-  svg.addEventListener("pointercancel",endPt);
+  svg.addEventListener("pointercancel",(e)=>{
+    pts.delete(e.pointerId);
+    if(pts.size<2) pinch=null;
+    if(drag&&e.pointerId===drag.id) drag=null;
+    suppressClick=true;
+  });
   svg.addEventListener("wheel",e=>{ e.preventDefault(); const p=pos(e); zoomAt(e.deltaY<0?1.12:0.89,p[0],p[1]); },{passive:false});
   document.addEventListener("keydown",e=>{
     if(S.view!=="chart") return;
@@ -1128,33 +1127,7 @@ document.getElementById("btn-share").onclick=()=>{
     else if(e.key==="0"){fitView(true);}
     else if(e.key==="Escape"){S.selNode=S.selLink=null;drawChart();renderSide();}
   });
-  window.addEventListener("resize",()=>{ if(S.view==="chart"){ drawChart(); setSheet(S.sheet,true); } });
-
-  /* sheet handle drag */
-  const handle=document.getElementById("sheet-handle");
-  const sideEl=()=>document.querySelector(".side");
-  let sy=0, sh=0;
-  handle.addEventListener("pointerdown",e=>{
-    sy=e.clientY; sh=sideEl().offsetHeight;
-    sideEl().classList.add("notrans");
-    try{handle.setPointerCapture(e.pointerId);}catch(_){}
-  });
-  handle.addEventListener("pointermove",e=>{
-    const sd=sideEl(); if(!sd.classList.contains("notrans")) return;
-    const h=sheetHeights();
-    sd.style.height=Math.min(h.full,Math.max(64,sh+(sy-e.clientY)))+"px";
-  });
-  const snap=()=>{
-    const sd=sideEl(); if(!sd.classList.contains("notrans")) return;
-    sd.classList.remove("notrans");
-    const h=sheetHeights(), cur=sd.offsetHeight;
-    const order=[["peek",h.peek],["half",h.half],["full",h.full]];
-    order.sort((a,b)=>Math.abs(a[1]-cur)-Math.abs(b[1]-cur));
-    setSheet(order[0][0]);
-  };
-  handle.addEventListener("pointerup",snap);
-  handle.addEventListener("pointercancel",snap);
-})();
+  window.addEventListener("resize",()=>{ if(S.view==="chart") drawChart(); });
 
 /* ---------- build view ---------- */
 function openBuild(id){
