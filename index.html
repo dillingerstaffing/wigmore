@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260915-1522">
+<meta name="build-version" content="v20260915-1533">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -312,7 +312,7 @@ footer{border-top:1px solid var(--line);margin-top:auto}
     <div class="chart-wrap">
       <div class="canvas-box" id="canvas">
         <svg id="svg" role="img" aria-label="Wigmore chart"></svg>
-        <div class="canvas-hint">Two fingers to move the chart &middot; pinch to zoom &middot; one finger scrolls the page</div>
+        <div class="canvas-hint">Drag sideways to move the chart &middot; pinch to zoom &middot; one finger scrolls the page</div>
         <div class="callout" id="callout" hidden>
           <button class="co-x" id="co-x" aria-label="Dismiss">&times;</button>
           <div class="co-tag"></div>
@@ -1251,7 +1251,20 @@ document.getElementById("btn-share").onclick=()=>{
     if(one&&tpts.size===1){
       let t=null;
       for(let i=0;i<e.touches.length;i++) if(e.touches[i].identifier===one.id) t=e.touches[i];
-      if(t&&!one.shown&&Math.hypot(t.clientX-one.sx,t.clientY-one.sy)>14){ one.shown=true; nudgeHint(); }
+      if(t){
+        const dx=t.clientX-one.sx, dy=t.clientY-one.sy;
+        if(!one.shown&&Math.hypot(dx,dy)>14){ one.shown=true; nudgeHint(); }
+        /* one-finger horizontal drag pans the chart (vertical stays page scroll) */
+        if(drag&&!drag.lock){
+          if(Math.abs(dx)>12||Math.abs(dy)>12) drag.lock=Math.abs(dx)>=Math.abs(dy)?"h":"v";
+        }
+        if(drag&&drag.lock==="h"){
+          e.preventDefault();
+          const p=tp(t);
+          if(!drag.moved&&Math.hypot(p[0]-drag.p[0],p[1]-drag.p[1])>6) drag.moved=true;
+          if(drag.moved){ S.pan.x=drag.x+(p[0]-drag.p[0]); applyPan(); }
+        }
+      }
     }
   },{passive:false});
   const tend=(e)=>{
@@ -1280,8 +1293,9 @@ document.getElementById("btn-share").onclick=()=>{
       drag=null;
     }
     if(tpts.size===1&&!coop){
-      const en=[...tpts.entries()][0];
+      const en=[...tpts.entries()][0], r=r0();
       one={id:en[0],sx:en[1].x,sy:en[1].y,shown:true};
+      drag={p:[en[1].x-r.left,en[1].y-r.top],x:S.pan.x,y:S.pan.y,moved:true,id:en[0]};
     }
   };
   svg.addEventListener("touchend",tend);
