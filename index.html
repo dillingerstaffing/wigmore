@@ -114,7 +114,7 @@ label.f{display:block;margin:14px 0 6px;font-size:10px;letter-spacing:.2em;text-
 .chart-bar .sp{flex:1}
 select.inline{width:auto;padding:8px 10px;font-size:12px}
 .chart-wrap{display:grid;grid-template-columns:1fr 330px;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel2)}
-.canvas-box{position:relative;min-height:520px;height:62vh;touch-action:pan-y;cursor:grab}
+.canvas-box{position:relative;min-height:520px;height:62vh;touch-action:none;cursor:grab}
 .canvas-box:active{cursor:grabbing}
 .canvas-box svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .grid-dot{fill:#1a201b}
@@ -281,7 +281,7 @@ footer{border-top:1px solid var(--line);margin-top:auto}
     <div class="chart-wrap">
       <div class="canvas-box" id="canvas">
         <svg id="svg" role="img" aria-label="Wigmore chart"></svg>
-        <div class="canvas-hint">Drag sideways to pan &middot; pinch to zoom &middot; tap a shape</div>
+        <div class="canvas-hint">Drag to pan &middot; pinch to zoom &middot; tap a shape</div>
         <div class="callout" id="callout" hidden>
           <button class="co-x" id="co-x" aria-label="Dismiss">&times;</button>
           <div class="co-tag"></div>
@@ -303,7 +303,7 @@ footer{border-top:1px solid var(--line);margin-top:auto}
       </aside>
     </div>
     <p class="hint hint-desk" style="margin-top:10px">Drag to pan, scroll or pinch to zoom. Click a shape for its key-list entry. Keyboard: + / &minus; zoom, 0 fit, Esc deselect.</p>
-    <p class="hint hint-mob">Tap a shape for its entry &middot; drag sideways to pan &middot; pinch to zoom &middot; scroll vertically for the page.</p>
+    <p class="hint hint-mob">Drag to pan &middot; pinch to zoom &middot; tap a shape for its entry. Fit shows the whole chart; Frame zooms to the selected claim.</p>
   </section>
 
   <!-- BUILD -->
@@ -827,7 +827,7 @@ function openChart(id){
     const o=document.createElement("option"); o.value="__shared"; o.textContent=currentName(); o.selected=true;
     sw.appendChild(o);
   }
-  renderShareSlot(); drawChart(); renderSide(); renderStats(); hideCallout();
+  renderShareSlot(); drawChart(); fitView(); renderSide(); renderStats(); hideCallout();
   if(!fromShared) localStorage.setItem(LS_LAST,id);
   fitView(false);
 }
