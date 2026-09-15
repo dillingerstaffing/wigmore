@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260915-1533">
+<meta name="build-version" content="v20260915-1550">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -436,31 +436,43 @@ function libSave(l){ localStorage.setItem(LS_LIB, JSON.stringify(l)); }
 function uid(p){ return p+Math.random().toString(36).slice(2,8); }
 function blankChart(name){ return {name:name||"Untitled chart", nodes:[], links:[]}; }
 
-/* ---------- example chart: the missing laptop ---------- */
+/* ---------- example chart: the bad deploy (SRE incident ritual, illustrated) ---------- */
 const EXAMPLE = {
-  name:"The missing laptop",
+  name:"The bad deploy: an SRE incident ritual (illustrated)",
   nodes:[
-    {id:"n1", shape:"circle", role:"ultimate", statement:"Jordan took the laptop from the lab on Tuesday night."},
-    {id:"n2", shape:"circle", role:"penultimate", statement:"Jordan was inside the lab on Tuesday night."},
-    {id:"n3", shape:"square", witness:"Priya N.", assertion:"I saw Jordan at the lab door around 9pm on Tuesday."},
-    {id:"n4", shape:"circle", role:"evidence", statement:"Jordan's keycard opened the lab door at 9:04pm on Tuesday."},
-    {id:"n5", shape:"circle", role:"evidence", statement:"The printed keycard log for Tuesday night, shown and read aloud.", autoptic:true},
-    {id:"n6", shape:"d", generalization:"A person whose keycard opens a door at a given time was probably at that door then."},
-    {id:"n7", shape:"triangle", kind:"explanation", statement:"Jordan lent the keycard to Sam earlier that day, so the log proves nothing about Jordan."},
-    {id:"n8", shape:"triangle", kind:"rebuttal", statement:"Sam was across town at a concert at 9pm on Tuesday, verified by ticket stub."},
-    {id:"n9", shape:"square", witness:"Sam R.", assertion:"Jordan was home by 8:30pm on Tuesday; we spoke on the phone.", undermines:true},
-    {id:"n10", shape:"circle", role:"evidence", statement:"The lab camera was unplugged all Tuesday night, so no footage exists.", undermines:true}
+    {id:"n1", shape:"circle", role:"ultimate", statement:"The 4.7.2 canary caused the checkout latency incident: its synchronous per-item recommendations queries saturated the checkout-api connection pool."},
+    {id:"n2", shape:"circle", role:"penultimate", statement:"The latency came from the 4.7.2 deploy, not from a downstream dependency."},
+    {id:"n3", shape:"circle", role:"evidence", statement:"14:11 detection: checkout p99 at 1,150ms and climbing; success rate 99.4 percent falling to 97.8 percent."},
+    {id:"n4", shape:"circle", role:"evidence", statement:"Only the 4.7.2 canary pods (10 percent of traffic, deployed 14:02) showed latency; 4.7.1 pods on identical traffic held p99 180ms."},
+    {id:"n5", shape:"circle", role:"evidence", statement:"4.7.2's recommendations module issues one synchronous 45ms query per line item, about 270ms of serial latency for a typical cart."},
+    {id:"n6", shape:"circle", role:"evidence", statement:"Pricing-service p99 held normal at 120ms through the incident window."},
+    {id:"n7", shape:"circle", role:"evidence", statement:"Rollback to 4.7.1 completed 14:38; p99 under 200ms by 14:44, success 99.4 percent by 14:50, synthetic probers green 30 minutes; resolved 15:10."},
+    {id:"n8", shape:"circle", role:"evidence", statement:"The pager watches symptoms users feel: p99 over 800ms for 10 minutes, against an SLO of p99 under 500ms and success over 99 percent."},
+    {id:"n9", shape:"square", witness:"Checkout on-call", assertion:"Every hot pod was a 4.7.2 canary; the 4.7.1 pods on identical traffic were fine."},
+    {id:"n10", shape:"square", witness:"Incident commander", assertion:"SEV-2 declared at 14:25 on the canary split; IC, operations lead, and scribe assigned; war room opened."},
+    {id:"n11", shape:"d", generalization:"Alert on symptoms users feel, not causes; page only when it is urgent, actionable, and needs a human."},
+    {id:"n12", shape:"d", generalization:"Mitigation needs only the location of the problem, not its explanation: roll back the correlated release before the root cause is understood."},
+    {id:"n13", shape:"d", generalization:"Classify higher when in doubt; downgrading is cheaper than under-responding."},
+    {id:"n14", shape:"triangle", kind:"explanation", statement:"A pricing-service downstream slowdown caused the latency; its p95 was elevated that morning."},
+    {id:"n15", shape:"triangle", kind:"rebuttal", statement:"Pricing-service p99 was normal at 120ms during the window, so the morning's elevated p95 explains nothing about the incident."},
+    {id:"n16", shape:"square", witness:"Postmortem review", assertion:"Action items: canary analysis with auto-rollback (P1); CI query-count assertions (P1); async recommendations fetch (P2); pool-saturation early-warning alert (P2)."}
   ],
   links:[
-    {id:"l1", from:"n3", to:"n2", type:"inference", strength:"neutral", composite:"c1"},
-    {id:"l2", from:"n4", to:"n2", type:"inference", strength:"strong", composite:"c1"},
-    {id:"l3", from:"n5", to:"n4", type:"inference", strength:"neutral", composite:null},
-    {id:"l4", from:"n6", to:"n2", type:"inference", strength:"neutral", composite:"c1"},
+    {id:"l1", from:"n4", to:"n2", type:"inference", strength:"strong", composite:"c1"},
+    {id:"l2", from:"n9", to:"n2", type:"inference", strength:"neutral", composite:"c1"},
+    {id:"l3", from:"n6", to:"n2", type:"inference", strength:"neutral", composite:null},
+    {id:"l4", from:"n10", to:"n2", type:"inference", strength:"neutral", composite:null},
     {id:"l5", from:"n2", to:"n1", type:"inference", strength:"neutral", composite:null},
-    {id:"l6", from:"n7", to:"n4", type:"explanation", strength:"neutral", composite:null},
-    {id:"l7", from:"n8", to:"n7", type:"rebuttal", strength:"strong", composite:null},
-    {id:"l8", from:"n9", to:"n2", type:"refutation", strength:"weak", composite:null},
-    {id:"l9", from:"n10", to:"n1", type:"refutation", strength:"weak", composite:null}
+    {id:"l6", from:"n5", to:"n1", type:"inference", strength:"strong", composite:null},
+    {id:"l7", from:"n7", to:"n1", type:"inference", strength:"strong", composite:null},
+    {id:"l8", from:"n3", to:"n1", type:"inference", strength:"neutral", composite:null},
+    {id:"l9", from:"n8", to:"n3", type:"inference", strength:"neutral", composite:null},
+    {id:"l10", from:"n11", to:"n8", type:"inference", strength:"neutral", composite:null},
+    {id:"l11", from:"n12", to:"n7", type:"inference", strength:"neutral", composite:null},
+    {id:"l12", from:"n13", to:"n3", type:"inference", strength:"neutral", composite:null},
+    {id:"l13", from:"n14", to:"n2", type:"explanation", strength:"neutral", composite:null},
+    {id:"l14", from:"n15", to:"n14", type:"rebuttal", strength:"strong", composite:null},
+    {id:"l15", from:"n16", to:"n1", type:"inference", strength:"weak", composite:null}
   ]
 };
 
@@ -1310,11 +1322,12 @@ document.getElementById("btn-share").onclick=()=>{
 function openBuild(id){
   if(id==="example"){
     const lib=libLoad();
-    const prior=lib.find(c=>c.name==="The missing laptop (copy)");
+    const copyName=EXAMPLE.name+" (copy)";
+    const prior=lib.find(c=>c.name===copyName);
     if(prior){ id=prior.id; }
     else{
       const nid=uid("c");
-      const data=JSON.parse(JSON.stringify(EXAMPLE)); data.name="The missing laptop (copy)";
+      const data=JSON.parse(JSON.stringify(EXAMPLE)); data.name=copyName;
       lib.unshift({id:nid,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
       id=nid;
     }
