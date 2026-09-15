@@ -210,6 +210,37 @@ footer{border-top:1px solid var(--line);margin-top:auto}
   .canvas-box{min-height:380px;height:52vh}
   nav.tabs button{padding:20px 10px}
 }
+
+/* ---------- mobile: fullscreen canvas, bottom sheet ---------- */
+.hint-mob{display:none}
+.sheet-handle{display:none}
+@media (max-width:760px){
+  body.chart-open{overflow:hidden}
+  body.chart-open footer{display:none}
+  body.chart-open main{padding:12px;max-width:none}
+  #v-chart.on{display:flex;flex-direction:column;height:calc(100vh - 84px);height:calc(100dvh - 84px)}
+  #v-chart .hint-desk{display:none}
+  #v-chart .hint-mob{display:block;margin-top:8px}
+  .chart-bar{gap:8px;margin-bottom:10px}
+  .chart-bar select.inline{flex:1;min-width:0}
+  .chart-bar .btn.sm{padding:7px 10px}
+  #chart-stats{margin-bottom:10px}
+  #chart-stats div{padding:8px 6px}
+  #chart-stats b{font-size:16px}
+  .chart-wrap{position:relative;display:block;flex:1;min-height:0}
+  .canvas-box{position:absolute;inset:0;height:auto;min-height:0}
+  .zoom-ctl{bottom:118px}
+  .side{position:absolute;left:0;right:0;bottom:0;z-index:10;border-left:0;border-top:1px solid var(--line);
+    background:var(--panel);border-radius:10px 10px 0 0;max-height:none;min-height:0;
+    box-shadow:0 -10px 34px rgba(0,0,0,.5);transition:height .22s ease-out}
+  .side.notrans{transition:none}
+  .sheet-handle{display:flex;align-items:center;justify-content:center;height:30px;flex:none;
+    touch-action:none;cursor:grab}
+  .sheet-handle::before{content:"";width:46px;height:4px;border-radius:2px;background:var(--dim)}
+  .side-tabs{flex:none}
+  .side-body{padding:14px 16px}
+  .share-banner{top:8px}
+}
 </style>
 </head>
 <body>
@@ -249,6 +280,7 @@ footer{border-top:1px solid var(--line);margin-top:auto}
       <select class="inline" id="chart-switch" aria-label="Choose chart"></select>
       <span class="sp"></span>
       <button class="btn sm ghost" id="btn-fit">Fit</button>
+      <button class="btn sm ghost" id="btn-frame">Frame</button>
       <button class="btn sm" id="btn-edit">Edit</button>
       <button class="btn sm primary" id="btn-share">Share link</button>
     </div>
@@ -263,6 +295,7 @@ footer{border-top:1px solid var(--line);margin-top:auto}
         </div>
       </div>
       <aside class="side">
+        <div class="sheet-handle" id="sheet-handle" aria-hidden="true"></div>
         <div class="side-tabs">
           <button data-side="keylist" class="on">Key list</button>
           <button data-side="detail">Detail</button>
@@ -270,7 +303,8 @@ footer{border-top:1px solid var(--line);margin-top:auto}
         <div class="side-body" id="side-body"></div>
       </aside>
     </div>
-    <p class="hint" style="margin-top:10px">Drag to pan, scroll or pinch to zoom. Click a shape for its key-list entry. Keyboard: + / &minus; zoom, 0 fit, Esc deselect.</p>
+    <p class="hint hint-desk" style="margin-top:10px">Drag to pan, scroll or pinch to zoom. Click a shape for its key-list entry. Keyboard: + / &minus; zoom, 0 fit, Esc deselect.</p>
+    <p class="hint hint-mob">Drag to pan &middot; pinch to zoom &middot; tap a shape for its entry &middot; double-tap to zoom in.</p>
   </section>
 
   <!-- BUILD -->
@@ -636,6 +670,7 @@ function renderChart(svg, d, opts){
   d.nodes.forEach(n=>{
     const x=n._x, y=n._y, sp=shapePath(n,x,y);
     const gn=el("g",{"class":"node"+(opts.sel===n.id?" sel":""),transform:"translate(0,0)"},g);
+    gn.dataset.nid=n.id;
     el("circle",{cx:x,cy:y,r:44,"class":"halo"},gn);
     const frame=el("path",{d:sp.d,fill:"none",stroke:n.shape==="circle"&&n.role==="ultimate"?"var(--acid)":"var(--ink)","stroke-width":1.5,"class":"frame"},gn);
     if(n.opposing){
@@ -672,8 +707,10 @@ function edgePath(a,b,l){
 const S = {
   view:"library", chartId:null, shared:null, sharedSaved:false,
   selNode:null, selLink:null, sideTab:"keylist",
-  pan:{x:0,y:0,k:1}, editDraft:null
+  pan:{x:0,y:0,k:1}, editDraft:null, sheet:"peek"
 };
+let suppressClick=false;
+function isMobileView(){ return window.matchMedia("(max-width:760px)").matches; }
 function allCharts(){
   const lib=libLoad();
   return [{id:"example", name:EXAMPLE.name, builtin:true, data:EXAMPLE}]
@@ -701,6 +738,7 @@ function saveDraftToLib(){
 /* ---------- router ---------- */
 function go(view, arg){
   S.view=view;
+  document.body.classList.toggle("chart-open", view==="chart");
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
   document.getElementById("v-"+view).classList.add("on");
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.view===view));
@@ -791,7 +829,7 @@ function openChart(id){
     const o=document.createElement("option"); o.value="__shared"; o.textContent=currentName(); o.selected=true;
     sw.appendChild(o);
   }
-  renderShareSlot(); drawChart(); renderSide(); renderStats();
+  renderShareSlot(); drawChart(); renderSide(); renderStats(); setSheet("peek",true);
   if(!fromShared) localStorage.setItem(LS_LAST,id);
   fitView(false);
 }
@@ -825,8 +863,9 @@ function renderShareSlot(){
 function drawChart(){
   const d=currentData();
   chartGeom=renderChart(svg,d,{sel:S.selNode,
-    onNode:(n)=>{S.selNode=n.id;S.selLink=null;S.sideTab="detail";drawChart();renderSide();},
-    onLink:(l)=>{S.selLink=l.id;S.selNode=null;S.sideTab="detail";drawChart();renderSide();}});
+    onNode:(n)=>selectNode(n.id),
+    onLink:(l)=>{S.selLink=l.id;S.selNode=null;S.sideTab="detail";drawChart();renderSide();
+      if(isMobileView()) setSheet("half");}});
   applyPan();
 }
 function renderStats(){
@@ -854,7 +893,7 @@ function renderSide(){
       const tx=document.createElement("span"); tx.textContent=nodeText(n);
       li.appendChild(kn); li.appendChild(ks); li.appendChild(tx);
       li.style.cursor="pointer";
-      li.onclick=()=>{S.selNode=n.id;S.selLink=null;S.sideTab="detail";drawChart();renderSide();};
+      li.onclick=()=>selectNode(n.id);
       ol.appendChild(li);
     });
     body.innerHTML=""; 
@@ -889,6 +928,14 @@ function renderSide(){
         const linked=d.links.filter(l=>l.from===n.id||l.to===n.id);
         if(linked.length) row("Lines",linked.length+" connected");
         wrap.appendChild(dl);
+        const idx=d.nodes.indexOf(n);
+        const nav=document.createElement("div");
+        nav.style.cssText="display:flex;gap:8px;margin-top:16px";
+        const mkb=(t,dis,fn)=>{ const b=document.createElement("button");
+          b.className="btn sm ghost"; b.textContent=t; b.disabled=dis; b.onclick=fn; return b; };
+        nav.appendChild(mkb("\u2190 Prev",idx<=0,()=>selectNode(d.nodes[idx-1].id)));
+        nav.appendChild(mkb("Next \u2192",idx>=d.nodes.length-1,()=>selectNode(d.nodes[idx+1].id)));
+        wrap.appendChild(nav);
       }
     }else if(S.selLink){
       const l=d.links.find(x=>x.id===S.selLink);
@@ -915,7 +962,11 @@ function renderSide(){
 document.querySelectorAll(".side-tabs button").forEach(b=>b.addEventListener("click",()=>{
   S.sideTab=b.dataset.side; renderSide();
 }));
-svg.addEventListener("click",()=>{ if(S.selNode||S.selLink){S.selNode=S.selLink=null;drawChart();renderSide();} });
+svg.addEventListener("click",()=>{
+  if(suppressClick){ suppressClick=false; return; }
+  if(S.selNode||S.selLink){ S.selNode=S.selLink=null; drawChart(); renderSide(); }
+  if(isMobileView()) setSheet("peek");
+});
 
 /* pan / zoom */
 function applyPan(){
@@ -923,15 +974,61 @@ function applyPan(){
   const g=chartGeom.g;
   g.setAttribute("transform","translate("+S.pan.x+","+S.pan.y+") scale("+S.pan.k+")");
 }
-function fitView(anim){
-  const d=currentData(); if(!d.nodes.length) return;
-  const xs=d.nodes.map(n=>n._x), ys=d.nodes.map(n=>n._y);
+function fitNodes(ns){
+  if(!ns.length) return;
+  const xs=ns.map(n=>n._x), ys=ns.map(n=>n._y);
   const x0=Math.min.apply(null,xs)-90, x1=Math.max.apply(null,xs)+90;
   const y0=Math.min.apply(null,ys)-80, y1=Math.max.apply(null,ys)+90;
-  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const mob=isMobileView();
+  const W=svg.clientWidth||800, H=(svg.clientHeight||520)-(mob?110:0);
   const k=Math.min(W/(x1-x0), H/(y1-y0), 1.6);
   S.pan.k=k; S.pan.x=W/2-(x0+x1)/2*k; S.pan.y=H/2-(y0+y1)/2*k;
   applyPan();
+}
+function fitView(anim){ fitNodes(currentData().nodes); }
+function frameSelection(){
+  const d=currentData(); if(!d.nodes.length) return;
+  if(!S.selNode){ fitView(); return; }
+  const adj={};
+  d.links.forEach(l=>{ (adj[l.from]=adj[l.from]||[]).push(l.to); (adj[l.to]=adj[l.to]||[]).push(l.from); });
+  const seen={}, q=[S.selNode]; seen[S.selNode]=1;
+  while(q.length){ const c=q.pop(); (adj[c]||[]).forEach(m=>{ if(!seen[m]){ seen[m]=1; q.push(m); } }); }
+  fitNodes(d.nodes.filter(n=>seen[n.id]));
+}
+function panToNode(n){
+  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const k=Math.min(4,Math.max(S.pan.k,1.15));
+  S.pan.k=k; S.pan.x=W/2-n._x*k; S.pan.y=H*0.40-n._y*k;
+  applyPan();
+}
+function zoomToNode(n){
+  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const k2=Math.min(4,Math.max(S.pan.k*1.5,1.5));
+  S.pan.k=k2; S.pan.x=W/2-n._x*k2; S.pan.y=H*0.40-n._y*k2;
+  applyPan();
+}
+function selectNode(id, pan){
+  S.selNode=id; S.selLink=null; S.sideTab="detail"; drawChart(); renderSide();
+  if(isMobileView()){
+    const d=currentData(), n=d.nodes.find(x=>x.id===id);
+    if(n&&pan!==false) panToNode(n);
+    setSheet("half");
+  }
+}
+/* bottom sheet */
+function sheetHeights(){
+  const wrap=document.querySelector(".chart-wrap");
+  const H=wrap?wrap.clientHeight:600;
+  return {peek:104, half:Math.round(H*0.48), full:Math.round(H*0.94)};
+}
+function setSheet(st, instant){
+  S.sheet=st;
+  const side=document.querySelector(".side"); if(!side) return;
+  if(!isMobileView()){ side.style.height=""; return; }
+  const h=sheetHeights();
+  if(instant) side.classList.add("notrans");
+  side.style.height=h[st]+"px";
+  if(instant) requestAnimationFrame(()=>{ const sd=document.querySelector(".side"); if(sd) sd.classList.remove("notrans"); });
 }
 function zoomAt(f, cx, cy){
   const k2=Math.min(4,Math.max(.25,S.pan.k*f));
@@ -943,6 +1040,7 @@ document.getElementById("z-in").onclick=()=>zoomAt(1.25,(svg.clientWidth||800)/2
 document.getElementById("z-out").onclick=()=>zoomAt(.8,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
 document.getElementById("z-fit").onclick=()=>fitView(true);
 document.getElementById("btn-fit").onclick=()=>fitView(true);
+document.getElementById("btn-frame").onclick=()=>frameSelection();
 document.getElementById("btn-edit").onclick=()=>{
   if(S.shared){ alert("Save the shared chart to your collection before editing it."); return; }
   go("build",S.chartId);
@@ -956,46 +1054,120 @@ document.getElementById("btn-share").onclick=()=>{
   });
 };
 (function(){
-  let drag=null, pinch=0;
+  const pts=new Map();
+  let drag=null, pinch=null, lastTap={t:0,x:0,y:0};
   const pos=(e)=>{ const r=svg.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
-  svg.addEventListener("pointerdown",e=>{ drag={p:pos(e),x:S.pan.x,y:S.pan.y,moved:false,id:e.pointerId}; });
-  svg.addEventListener("pointermove",e=>{
-    if(!drag||e.pointerId!==drag.id) return;
-    const p=pos(e);
-    if(!drag.moved && Math.hypot(p[0]-drag.p[0],p[1]-drag.p[1])<6) return;
-    if(!drag.moved){ drag.moved=true; try{svg.setPointerCapture(e.pointerId);}catch(_){} }
-    S.pan.x=drag.x+(p[0]-drag.p[0]); S.pan.y=drag.y+(p[1]-drag.p[1]); applyPan();
-  });
-  const up=()=>{drag=null;};
-  svg.addEventListener("pointerup",up); svg.addEventListener("pointercancel",up);
-  svg.addEventListener("wheel",e=>{ e.preventDefault(); const p=pos(e); zoomAt(e.deltaY<0?1.12:0.89,p[0],p[1]); },{passive:false});
-  svg.addEventListener("touchmove",e=>{
-    if(e.touches.length===2){
-      e.preventDefault();
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      if(pinch) { const r=svg.getBoundingClientRect();
-        zoomAt(d/pinch, r.width/2, r.height/2); }
-      pinch=d; drag=null;
+  const pdist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+  svg.addEventListener("pointerdown",e=>{
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===1){
+      drag={p:pos(e),x:S.pan.x,y:S.pan.y,moved:false,id:e.pointerId};
+    }else if(pts.size===2){
+      const arr=[...pts.values()];
+      const r=svg.getBoundingClientRect();
+      pinch={d:pdist(arr[0],arr[1]),
+             mx:(arr[0].x+arr[1].x)/2-r.left, my:(arr[0].y+arr[1].y)/2-r.top,
+             x:S.pan.x, y:S.pan.y, k:S.pan.k};
+      drag=null; suppressClick=true;
     }
-  },{passive:false});
-  svg.addEventListener("touchend",()=>{pinch=0;});
+  });
+  svg.addEventListener("pointermove",e=>{
+    if(!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pinch&&pts.size>=2){
+      const arr=[...pts.values()].slice(0,2);
+      const r=svg.getBoundingClientRect();
+      const mx=(arr[0].x+arr[1].x)/2-r.left, my=(arr[0].y+arr[1].y)/2-r.top;
+      const d=pdist(arr[0],arr[1]);
+      if(pinch.d>4&&d>4){
+        const k2=Math.min(4,Math.max(.25,pinch.k*d/pinch.d));
+        const sc=k2/pinch.k;
+        S.pan.k=k2;
+        S.pan.x=mx-(pinch.mx-pinch.x)*sc;
+        S.pan.y=my-(pinch.my-pinch.y)*sc;
+        applyPan();
+      }
+      return;
+    }
+    if(drag&&e.pointerId===drag.id){
+      const p=pos(e);
+      if(!drag.moved&&Math.hypot(p[0]-drag.p[0],p[1]-drag.p[1])<6) return;
+      if(!drag.moved){ drag.moved=true; try{svg.setPointerCapture(e.pointerId);}catch(_){} }
+      S.pan.x=drag.x+(p[0]-drag.p[0]); S.pan.y=drag.y+(p[1]-drag.p[1]); applyPan();
+    }
+  });
+  const endPt=(e)=>{
+    const wasDrag=drag&&e.pointerId===drag.id?drag:null;
+    pts.delete(e.pointerId);
+    if(pts.size<2) pinch=null;
+    if(wasDrag){
+      if(wasDrag.moved){ suppressClick=true; }
+      else{
+        const now=Date.now(), p=pos(e);
+        if(now-lastTap.t<350&&Math.hypot(p[0]-lastTap.x,p[1]-lastTap.y)<28){
+          lastTap={t:0,x:0,y:0};
+          const gn=e.target&&e.target.closest?e.target.closest(".node"):null;
+          const nid=gn&&gn.dataset?gn.dataset.nid:null;
+          const d=currentData(), n=nid&&d.nodes.find(x=>x.id===nid);
+          if(n) zoomToNode(n); else zoomAt(1.5,p[0],p[1]);
+        }else lastTap={t:now,x:p[0],y:p[1]};
+      }
+      drag=null;
+    }
+  };
+  svg.addEventListener("pointerup",endPt);
+  svg.addEventListener("pointercancel",endPt);
+  svg.addEventListener("wheel",e=>{ e.preventDefault(); const p=pos(e); zoomAt(e.deltaY<0?1.12:0.89,p[0],p[1]); },{passive:false});
   document.addEventListener("keydown",e=>{
     if(S.view!=="chart") return;
-    if(e.key==="+"||e.key==="=") zoomAt(1.2,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
-    if(e.key==="-") zoomAt(.84,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
-    if(e.key==="0") fitView(true);
-    if(e.key==="Escape"){S.selNode=S.selLink=null;drawChart();renderSide();}
+    const t=e.target;
+    if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.tagName==="SELECT")) return;
+    if(e.key==="+"||e.key==="="){zoomAt(1.2,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);e.preventDefault();}
+    else if(e.key==="-"||e.key==="_"){zoomAt(.84,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);e.preventDefault();}
+    else if(e.key==="0"){fitView(true);}
+    else if(e.key==="Escape"){S.selNode=S.selLink=null;drawChart();renderSide();}
   });
-  window.addEventListener("resize",()=>{ if(S.view==="chart") drawChart(); });
+  window.addEventListener("resize",()=>{ if(S.view==="chart"){ drawChart(); setSheet(S.sheet,true); } });
+
+  /* sheet handle drag */
+  const handle=document.getElementById("sheet-handle");
+  const sideEl=()=>document.querySelector(".side");
+  let sy=0, sh=0;
+  handle.addEventListener("pointerdown",e=>{
+    sy=e.clientY; sh=sideEl().offsetHeight;
+    sideEl().classList.add("notrans");
+    try{handle.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  handle.addEventListener("pointermove",e=>{
+    const sd=sideEl(); if(!sd.classList.contains("notrans")) return;
+    const h=sheetHeights();
+    sd.style.height=Math.min(h.full,Math.max(64,sh+(sy-e.clientY)))+"px";
+  });
+  const snap=()=>{
+    const sd=sideEl(); if(!sd.classList.contains("notrans")) return;
+    sd.classList.remove("notrans");
+    const h=sheetHeights(), cur=sd.offsetHeight;
+    const order=[["peek",h.peek],["half",h.half],["full",h.full]];
+    order.sort((a,b)=>Math.abs(a[1]-cur)-Math.abs(b[1]-cur));
+    setSheet(order[0][0]);
+  };
+  handle.addEventListener("pointerup",snap);
+  handle.addEventListener("pointercancel",snap);
 })();
 
 /* ---------- build view ---------- */
 function openBuild(id){
   if(id==="example"){
-    const lib=libLoad(); const nid=uid("c");
-    const data=JSON.parse(JSON.stringify(EXAMPLE)); data.name=data.name.replace(" (example)","")+" (copy)";
-    lib.unshift({id:nid,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
-    id=nid;
+    const lib=libLoad();
+    const prior=lib.find(c=>c.name==="The missing laptop (copy)");
+    if(prior){ id=prior.id; }
+    else{
+      const nid=uid("c");
+      const data=JSON.parse(JSON.stringify(EXAMPLE)); data.name="The missing laptop (copy)";
+      lib.unshift({id:nid,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
+      id=nid;
+    }
   }
   S.chartId=id; S.shared=null;
   const c=getChart(id); if(!c){ go("library"); return; }
