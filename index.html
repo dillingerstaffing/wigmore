@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Wigmore: Explorable Evidence Charts</title>
+<meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
+<meta name="theme-color" content="#0c0f0d">
+<link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
+<meta property="og:title" content="Wigmore: Explorable Evidence Charts">
+<meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dillingerstaffing.github.io/wigmore/">
+<meta property="og:site_name" content="Wigmore">
+<meta property="og:image" content="https://dillingerstaffing.github.io/wigmore/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Wigmore: Explorable Evidence Charts">
+<meta name="twitter:description" content="Create, explore, and share Wigmorean evidence charts. Strict Wigmore structure, nothing else.">
+<meta name="twitter:image" content="https://dillingerstaffing.github.io/wigmore/og-card.png">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/logo.svg">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Wigmore",
+"url":"https://dillingerstaffing.github.io/wigmore/",
+"description":"A playground for Wigmorean evidence analysis: create, explore, and share rigorous evidence charts in the browser. Strict Wigmore structure.",
+"applicationCategory":"EducationalApplication","operatingSystem":"Any",
+"author":{"@type":"Person","name":"Chris Dillinger","url":"https://www.linkedin.com/in/christopherdillinger/"},
+"inLanguage":"en","offers":{"@type":"Offer","price":"0"}}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0f0d; --panel:#121713; --panel2:#0e120e; --line:#2a322b; --line-soft:#1d231e;
+  --ink:#f0f2eb; --muted:#a8afa5; --dim:#747b73; --acid:#b8f34b; --acid-soft:#d9ff8d;
+  --paper:#e7eadf; --warn:#e0a83c; --bad:#e06c5b;
+  --mono:"IBM Plex Mono",ui-monospace,monospace; --serif:"Newsreader",Georgia,serif;
+  --r:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:clip}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;overflow-x:clip;min-height:100vh;display:flex;flex-direction:column}
+::selection{background:var(--acid);color:#0c0f0d}
+a{color:var(--acid);text-decoration:none}
+button{font-family:var(--mono);cursor:pointer}
+:focus-visible{outline:1px solid var(--acid);outline-offset:2px}
+
+/* ---------- header ---------- */
+header{border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:50}
+.hd-in{max-width:1240px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;flex:none}
+.brand img{width:30px;height:30px;display:block}
+.wordmark{font-weight:600;font-size:15px;letter-spacing:.22em}
+.wordmark small{display:block;font-size:9px;letter-spacing:.28em;color:var(--dim);font-weight:400}
+nav.tabs{margin-left:auto;display:flex;gap:2px;overflow-x:auto}
+nav.tabs button{background:none;border:0;color:var(--muted);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  padding:20px 14px;position:relative;white-space:nowrap}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button.on{color:var(--ink)}
+nav.tabs button.on::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--acid)}
+
+/* ---------- layout ---------- */
+main{flex:1;max-width:1240px;width:100%;margin:0 auto;padding:28px 20px 80px}
+.view{display:none}
+.view.on{display:block;animation:fade .18s ease-out}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.page-title{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
+.page-sub{color:var(--muted);font-size:13px;max-width:640px;margin-bottom:24px}
+.micro{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.rule{height:1px;background:var(--line);border:0;margin:18px 0}
+
+/* ---------- buttons / inputs ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+  color:var(--ink);font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:10px 16px;border-radius:var(--r)}
+.btn:hover{border-color:var(--dim)}
+.btn.primary{background:var(--acid);border-color:var(--acid);color:#0c0f0d;font-weight:600}
+.btn.primary:hover{background:var(--acid-soft)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 11px;font-size:10px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+input[type=text],input[type=url],textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);
+  color:var(--ink);font-family:var(--mono);font-size:13px;padding:10px 12px;border-radius:var(--r)}
+input:focus,textarea:focus,select:focus{border-color:var(--dim);outline:none}
+textarea{min-height:76px;resize:vertical}
+label.f{display:block;margin:14px 0 6px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.hint{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5}
+.checks{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer}
+.checks input{accent-color:var(--acid);width:15px;height:15px}
+
+/* ---------- library ---------- */
+.lib-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;position:relative}
+.card:hover{border-color:var(--dim)}
+.card h3{font-family:var(--serif);font-size:20px;font-weight:600;margin:8px 0 4px}
+.card .meta{font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap}
+.card .meta b{color:var(--muted);font-weight:500}
+.card .row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.badge{display:inline-block;font-size:9px;letter-spacing:.22em;text-transform:uppercase;border:1px solid var(--line);
+  color:var(--muted);padding:4px 8px;border-radius:2px}
+.badge.acid{border-color:var(--acid);color:var(--acid)}
+.continue{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);
+  border-left:2px solid var(--acid);border-radius:var(--r);padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
+.continue .t{font-size:13px}
+.continue .t b{font-weight:600}
+
+/* ---------- chart view ---------- */
+.chart-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.chart-bar .sp{flex:1}
+select.inline{width:auto;padding:8px 10px;font-size:12px}
+.chart-wrap{display:grid;grid-template-columns:1fr 330px;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel2)}
+.canvas-box{position:relative;min-height:520px;height:62vh;touch-action:none;cursor:grab}
+.canvas-box:active{cursor:grabbing}
+.canvas-box svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.grid-dot{fill:#1a201b}
+.zoom-ctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:5}
+.zoom-ctl button{width:34px;height:34px;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:var(--r);font-size:15px;line-height:1}
+.zoom-ctl button:hover{border-color:var(--acid);color:var(--acid)}
+.side{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0;max-height:62vh}
+.side-tabs{display:flex;border-bottom:1px solid var(--line);flex:none}
+.side-tabs button{flex:1;background:none;border:0;color:var(--dim);font-size:10px;letter-spacing:.18em;text-transform:uppercase;padding:13px 6px}
+.side-tabs button.on{color:var(--acid);box-shadow:inset 0 -2px 0 var(--acid)}
+.side-body{overflow-y:auto;padding:18px;flex:1;min-height:0}
+.keylist{list-style:none}
+.keylist li{padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px}
+.keylist li:last-child{border-bottom:0}
+.keylist .kn{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border:1px solid var(--line);
+  border-radius:50%;font-size:11px;color:var(--acid);margin-right:10px;vertical-align:2px;font-variant-numeric:tabular-nums}
+.keylist .ks{font-size:10px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;display:block;margin:2px 0 4px 36px}
+.detail h4{font-family:var(--serif);font-size:19px;font-weight:600;margin:6px 0 10px;line-height:1.35}
+.detail .kv{display:grid;grid-template-columns:118px 1fr;gap:6px 10px;font-size:12px;margin-top:10px}
+.detail .kv dt{color:var(--dim);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding-top:2px}
+.detail .kv dd{color:var(--ink)}
+.shape-tag{display:inline-block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--acid);
+  border:1px solid var(--line);padding:4px 10px;border-radius:2px}
+.stats{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:14px;background:var(--panel)}
+.stats div{flex:1;padding:10px 12px;border-right:1px solid var(--line-soft);text-align:center}
+.stats div:last-child{border-right:0}
+.stats b{display:block;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.stats span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.share-banner{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--acid);
+  border-radius:var(--r);padding:14px 18px;margin-bottom:14px;flex-wrap:wrap}
+.share-banner .t{font-size:13px;flex:1;min-width:200px}
+.empty-note{color:var(--dim);font-size:12px;padding:20px 0}
+
+/* svg nodes */
+.node{cursor:pointer}
+.node .halo{fill:transparent}
+.node:hover .halo{fill:rgba(184,243,75,.06)}
+.node.sel .frame{stroke:var(--acid);stroke-width:2}
+.node text{font-family:var(--mono);fill:var(--ink);pointer-events:none}
+.edge{fill:none;stroke:var(--muted);stroke-width:1.25}
+.edge.strong{stroke:var(--ink);stroke-width:2}
+.edge.weak{stroke-dasharray:5 4}
+.edge-lbl{font-family:var(--mono);font-size:11px;fill:var(--warn)}
+
+/* ---------- build view ---------- */
+.build-grid{display:grid;grid-template-columns:1fr 380px;gap:22px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:18px}
+.panel h3{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:500}
+.nrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+.nrow:last-child{border-bottom:0}
+.nrow .sym{flex:none;width:34px;height:34px}
+.nrow .tx{flex:1;min-width:0;font-size:12.5px}
+.nrow .tx .s1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nrow .tx .s2{font-size:10px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
+.nrow .acts{display:flex;gap:6px;flex:none}
+.icon-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:2px;font-size:10px;
+  letter-spacing:.1em;padding:6px 9px;text-transform:uppercase}
+.icon-btn:hover{color:var(--bad);border-color:var(--bad)}
+.icon-btn.ed:hover{color:var(--acid);border-color:var(--acid)}
+.shape-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.shape-opt{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;text-align:left;color:var(--ink)}
+.shape-opt:hover{border-color:var(--dim)}
+.shape-opt.on{border-color:var(--acid)}
+.shape-opt .sn{font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:8px 0 4px;color:var(--ink)}
+.shape-opt .sd{font-size:11px;color:var(--dim);line-height:1.5}
+.errs{background:#1a1210;border:1px solid var(--bad);border-radius:var(--r);padding:14px 16px;margin-top:14px;font-size:12px}
+.errs li{margin:4px 0 4px 16px;color:#e8a49a}
+.ok-note{border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin-top:14px;font-size:12px;color:var(--muted)}
+
+/* ---------- key view ---------- */
+.key-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:18px}
+.key-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.key-card .sym{height:64px;display:flex;align-items:center;margin-bottom:10px}
+.key-card h4{font-size:12px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px;font-weight:600}
+.key-card h4 em{color:var(--acid);font-style:normal}
+.key-card p{font-size:12.5px;color:var(--muted);line-height:1.6}
+.key-card .src{font-size:10.5px;color:var(--dim);margin-top:10px}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);margin-top:auto}
+.ft-in{max-width:1240px;margin:0 auto;padding:26px 20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+  font-size:11px;color:var(--dim)}
+.ft-in .sp{flex:1}
+
+@media (max-width:900px){
+  .chart-wrap{grid-template-columns:1fr}
+  .side{border-left:0;border-top:1px solid var(--line);max-height:none}
+  .side-body{max-height:46vh}
+  .build-grid{grid-template-columns:1fr}
+  .page-title{font-size:26px}
+  .canvas-box{min-height:380px;height:52vh}
+  nav.tabs button{padding:20px 10px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-in">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="Wigmore logo" width="30" height="30">
+      <div class="wordmark">WIGMORE<small>EVIDENCE CHARTS</small></div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-view="library">Library</button>
+      <button data-view="chart">Chart</button>
+      <button data-view="build">Build</button>
+      <button data-view="key">Schema</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- LIBRARY -->
+  <section class="view" id="v-library">
+    <div class="lib-head">
+      <div>
+        <div class="page-title">Evidence, charted.</div>
+        <div class="page-sub">Wigmore is a playground for Wigmorean evidence analysis: every claim numbered, every inference drawn, every chart shareable with a link. Strict Wigmore structure, nothing invented.</div>
+      </div>
+      <button class="btn primary" id="lib-new">+ New chart</button>
+    </div>
+    <div id="continue-slot"></div>
+    <div class="cards" id="lib-cards"></div>
+  </section>
+
+  <!-- CHART -->
+  <section class="view" id="v-chart">
+    <div id="share-slot"></div>
+    <div class="chart-bar">
+      <select class="inline" id="chart-switch" aria-label="Choose chart"></select>
+      <span class="sp"></span>
+      <button class="btn sm ghost" id="btn-fit">Fit</button>
+      <button class="btn sm" id="btn-edit">Edit</button>
+      <button class="btn sm primary" id="btn-share">Share link</button>
+    </div>
+    <div class="stats" id="chart-stats"></div>
+    <div class="chart-wrap">
+      <div class="canvas-box" id="canvas">
+        <svg id="svg" role="img" aria-label="Wigmore chart"></svg>
+        <div class="zoom-ctl">
+          <button id="z-in" aria-label="Zoom in">+</button>
+          <button id="z-out" aria-label="Zoom out">&minus;</button>
+          <button id="z-fit" aria-label="Fit to view">&#9712;</button>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="side-tabs">
+          <button data-side="keylist" class="on">Key list</button>
+          <button data-side="detail">Detail</button>
+        </div>
+        <div class="side-body" id="side-body"></div>
+      </aside>
+    </div>
+    <p class="hint" style="margin-top:10px">Drag to pan, scroll or pinch to zoom. Click a shape for its key-list entry. Keyboard: + / &minus; zoom, 0 fit, Esc deselect.</p>
+  </section>
+
+  <!-- BUILD -->
+  <section class="view" id="v-build">
+    <div class="page-title" id="build-title">Build</div>
+    <div class="page-sub">Charts are built only from Wigmore's own elements. Pick a shape, write its key-list statement, then draw the lines between them. Anything not in the schema cannot be added.</div>
+    <div class="build-grid">
+      <div>
+        <div class="panel">
+          <h3>Chart name</h3>
+          <input type="text" id="b-name" maxlength="80" placeholder="Name this chart">
+        </div>
+        <div class="panel">
+          <h3>Shapes &middot; the key list</h3>
+          <div class="hint" style="margin-bottom:10px">Every shape is numbered. The number points at its statement in the key list, exactly as Wigmore drew it.</div>
+          <div id="b-nodes"></div>
+          <hr class="rule">
+          <h3>Add a shape</h3>
+          <div class="shape-pick" id="shape-pick"></div>
+          <div id="node-form"></div>
+        </div>
+        <div class="panel">
+          <h3>Lines &middot; the reasoning</h3>
+          <div class="hint" style="margin-bottom:10px">Lines are the inferences. Each line type has one meaning; the form only offers valid pairings.</div>
+          <div id="b-links"></div>
+          <hr class="rule">
+          <h3>Add a line</h3>
+          <div id="link-form"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h3>Validate &amp; share</h3>
+          <div id="valid-box"></div>
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn primary" id="b-share">Copy share link</button>
+            <button class="btn" id="b-done">Open chart</button>
+          </div>
+          <p class="hint">Share links embed the whole chart in the URL. No account, no server, nothing stored anywhere but the link itself.</p>
+        </div>
+        <div class="panel">
+          <h3>Danger zone</h3>
+          <button class="btn sm" id="b-delete" style="color:var(--bad);border-color:var(--bad)">Delete this chart</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEMA -->
+  <section class="view" id="v-key">
+    <div class="page-title">The schema.</div>
+    <div class="page-sub">Wigmore's chart method has a fixed vocabulary: four shapes, four lines, a handful of marks. This page is the whole vocabulary. The builder enforces it; nothing else can be drawn.</div>
+    <div class="key-grid" id="key-grid"></div>
+    <p class="hint" style="margin-top:18px">After J.H. Wigmore, <em>The Principles of Judicial Proof</em> (1913) and <em>The Science of Judicial Proof</em> (1937), via the key recovered by Jean Goodwin and the simplified conventions of Anderson (1999).</p>
+  </section>
+</main>
+
+<footer>
+  <div class="ft-in">
+    <span>WIGMORE &middot; explorable evidence charts</span>
+    <span class="sp"></span>
+    <span>Strict Wigmore structure. Charts live in your browser and in share links, nowhere else.</span>
+  </div>
+</footer>
+<script>
+"use strict";
+/* ================= Wigmore =================
+   Strict schema after J.H. Wigmore (1913/1937), key via Goodwin,
+   simplified conventions via Anderson (1999). */
+
+/* ---------- schema ---------- */
+const SHAPES = {
+  circle:   {name:"Fact", sym:"\u25CB",
+    guide:"Any claimed fact: a probandum to be proved, a piece of circumstantial evidence, anything that is not testimony and not an explanation."},
+  square:   {name:"Testimonial assertion", sym:"\u25A1",
+    guide:"The fact that someone said something. Record who spoke and exactly what they asserted."},
+  triangle: {name:"Explanation", sym:"\u25B3",
+    guide:"An objection that explains away a conclusion, or the refutation of such an objection. Triangles point at what they engage."},
+  d:        {name:"Generalization", sym:"D",
+    guide:"The inference warrant: the general rule that lets the evidence support the conclusion. State it plainly enough to argue with."}
+};
+const ROLES = {
+  ultimate:"Ultimate probandum",
+  penultimate:"Penultimate probandum",
+  evidence:"Circumstantial evidence",
+  fact:"Other fact"
+};
+const LINES = {
+  inference:  {name:"Inference", guide:"Reasoning upward: the premises support the conclusion."},
+  refutation: {name:"Refutation", guide:"A premise offered against a conclusion. Drawn as a vertical arrow marked with a circle."},
+  explanation:{name:"Explanation", guide:"An objection that explains away a conclusion or lessens its force. Horizontal, to the right of the conclusion."},
+  rebuttal:   {name:"Refutation of explanation", guide:"Refutes the explanation and corroborates the original conclusion. Horizontal, marked with a cross."}
+};
+
+/* ---------- store ---------- */
+const LS_LIB="wigmore.lib.v1", LS_LAST="wigmore.last.v1";
+function libLoad(){ try{return JSON.parse(localStorage.getItem(LS_LIB))||[]}catch(e){return[]} }
+function libSave(l){ localStorage.setItem(LS_LIB, JSON.stringify(l)); }
+function uid(p){ return p+Math.random().toString(36).slice(2,8); }
+function blankChart(name){ return {name:name||"Untitled chart", nodes:[], links:[]}; }
+
+/* ---------- example chart: the missing laptop ---------- */
+const EXAMPLE = {
+  name:"The missing laptop (example)",
+  nodes:[
+    {id:"n1", shape:"circle", role:"ultimate", statement:"Jordan took the laptop from the lab on Tuesday night."},
+    {id:"n2", shape:"circle", role:"penultimate", statement:"Jordan was inside the lab on Tuesday night."},
+    {id:"n3", shape:"square", witness:"Priya N.", assertion:"I saw Jordan at the lab door around 9pm on Tuesday."},
+    {id:"n4", shape:"circle", role:"evidence", statement:"Jordan's keycard opened the lab door at 9:04pm on Tuesday."},
+    {id:"n5", shape:"circle", role:"evidence", statement:"The printed keycard log for Tuesday night, shown and read aloud.", autoptic:true},
+    {id:"n6", shape:"d", generalization:"A person whose keycard opens a door at a given time was probably at that door then."},
+    {id:"n7", shape:"triangle", kind:"explanation", statement:"Jordan lent the keycard to Sam earlier that day, so the log proves nothing about Jordan."},
+    {id:"n8", shape:"triangle", kind:"rebuttal", statement:"Sam was across town at a concert at 9pm on Tuesday, verified by ticket stub."},
+    {id:"n9", shape:"square", witness:"Sam R.", assertion:"Jordan was home by 8:30pm on Tuesday; we spoke on the phone.", undermines:true},
+    {id:"n10", shape:"circle", role:"evidence", statement:"The lab camera was unplugged all Tuesday night, so no footage exists.", undermines:true}
+  ],
+  links:[
+    {id:"l1", from:"n3", to:"n2", type:"inference", strength:"neutral", composite:"c1"},
+    {id:"l2", from:"n4", to:"n2", type:"inference", strength:"strong", composite:"c1"},
+    {id:"l3", from:"n5", to:"n4", type:"inference", strength:"neutral", composite:null},
+    {id:"l4", from:"n6", to:"n2", type:"inference", strength:"neutral", composite:"c1"},
+    {id:"l5", from:"n2", to:"n1", type:"inference", strength:"neutral", composite:null},
+    {id:"l6", from:"n7", to:"n4", type:"explanation", strength:"neutral", composite:null},
+    {id:"l7", from:"n8", to:"n7", type:"rebuttal", strength:"strong", composite:null},
+    {id:"l8", from:"n9", to:"n2", type:"refutation", strength:"weak", composite:null},
+    {id:"l9", from:"n10", to:"n1", type:"refutation", strength:"weak", composite:null}
+  ]
+};
+
+/* ---------- share codec: compact JSON, base64url, gzip when available ---------- */
+function pack(d){
+  const n = d.nodes.map(x=>[x.id,x.shape,x.role||"",x.statement||"",x.witness||"",x.assertion||"",
+    x.kind||"",x.generalization||"",x.undermines?1:0,x.opposing?1:0,x.noticed?1:0,x.doubt?1:0,x.autoptic?1:0]);
+  const l = d.links.map(x=>[x.id,x.from,x.to,x.type,x.strength,x.composite||""]);
+  return JSON.stringify({v:1, name:d.name, n:n, l:l});
+}
+function unpack(s){
+  const d = JSON.parse(s);
+  const N=(a)=>({id:a[0],shape:a[1],role:a[2]||undefined,statement:a[3]||undefined,
+    witness:a[4]||undefined,assertion:a[5]||undefined,kind:a[6]||undefined,
+    generalization:a[7]||undefined,undermines:!!a[8],opposing:!!a[9],noticed:!!a[10],
+    doubt:!!a[11],autoptic:!!a[12]});
+  const L=(a)=>({id:a[0],from:a[1],to:a[2],type:a[3],strength:a[4],composite:a[5]||null});
+  const clean=(o)=>{for(const k in o) if(o[k]===undefined) delete o[k]; return o;};
+  return {name:String(d.name||"Shared chart").slice(0,80),
+    nodes:d.n.map(a=>clean(N(a))), links:d.l.map(a=>clean(L(a)))};
+}
+function b64e(bytes){ let s=""; const b=new Uint8Array(bytes);
+  for(let i=0;i<b.length;i+=8192) s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+function b64d(str){ str=str.replace(/-/g,"+").replace(/_/g,"/");
+  const bin=atob(str); const b=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) b[i]=bin.charCodeAt(i); return b; }
+async function encodeShare(d){
+  const raw = new TextEncoder().encode(pack(d));
+  if(window.CompressionStream){
+    try{
+      const cs = new CompressionStream("gzip");
+      const w = cs.writable.getWriter(); w.write(raw); w.close();
+      const buf = await new Response(cs.readable).arrayBuffer();
+      return "z"+b64e(buf);
+    }catch(e){}
+  }
+  return "u"+b64e(raw);
+}
+async function decodeShare(s){
+  const k=s[0], body=s.slice(1);
+  if(k==="z" && window.DecompressionStream){
+    const ds = new DecompressionStream("gzip");
+    const w = ds.writable.getWriter(); w.write(b64d(body)); w.close();
+    const buf = await new Response(ds.readable).arrayBuffer();
+    return unpack(new TextDecoder().decode(buf));
+  }
+  return unpack(new TextDecoder().decode(b64d(body)));
+}
+function shareURL(d, cb){
+  encodeShare(d).then(code=>{
+    cb(location.origin+location.pathname+"#d="+code);
+  });
+}
+
+/* ---------- validation: the schema, enforced ---------- */
+function validate(d){
+  const errs=[];
+  const byId={}; d.nodes.forEach(n=>byId[n.id]=n);
+  const ult = d.nodes.filter(n=>n.shape==="circle"&&n.role==="ultimate");
+  if(ult.length===0) errs.push("Every chart needs exactly one ultimate probandum (a circle). Nothing is being proved yet.");
+  if(ult.length>1) errs.push("Only one ultimate probandum is allowed. Demote the extra: "+ult.slice(1).map(n=>"#"+num(d,n)).join(", "));
+  d.nodes.forEach(n=>{
+    if(!SHAPES[n.shape]) errs.push("Unknown shape on node "+n.id+".");
+    if(n.shape==="circle"&&!ROLES[n.role]) errs.push("#"+num(d,n)+": a circle needs a role (ultimate / penultimate probandum, evidence, or fact).");
+    if(n.shape==="circle"&&(n.statement||"").trim()==="") errs.push("#"+num(d,n)+": a circle needs its key-list statement.");
+    if(n.shape==="square"&&((n.witness||"").trim()===""||(n.assertion||"").trim()===""))
+      errs.push("#"+num(d,n)+": testimony needs both a witness and the assertion.");
+    if(n.shape==="triangle"&&(n.kind!=="explanation"&&n.kind!=="rebuttal"))
+      errs.push("#"+num(d,n)+": a triangle must be an explanation or a refutation of an explanation.");
+    if(n.shape==="triangle"&&(n.statement||"").trim()==="") errs.push("#"+num(d,n)+": a triangle needs its statement.");
+    if(n.shape==="d"&&(n.generalization||"").trim()==="") errs.push("#"+num(d,n)+": a generalization needs its stated rule.");
+  });
+  const seen={};
+  d.links.forEach(l=>{
+    const a=byId[l.from], b=byId[l.to];
+    if(!a||!b){ errs.push("A line points at a shape that no longer exists."); return; }
+    const k=l.from+">"+l.to+":"+l.type;
+    if(seen[k]) errs.push("Duplicate line: "+k+"."); seen[k]=1;
+    if(!LINES[l.type]) errs.push("Unknown line type.");
+    if(l.type==="inference"&&b.shape!=="circle")
+      errs.push("Inference lines conclude in a circle (a probandum or fact), not in #"+num(d,b)+".");
+    if((l.type==="explanation"||l.type==="rebuttal")&&a.shape!=="triangle")
+      errs.push("Only a triangle can "+(l.type==="explanation"?"explain":"rebut")+".");
+    if(l.type==="explanation"&&a.kind!=="explanation")
+      errs.push("#"+num(d,a)+" is a refutation, it cannot be used as an explanation.");
+    if(l.type==="rebuttal"&&a.kind!=="rebuttal")
+      errs.push("#"+num(d,a)+" is an explanation, it cannot be used as a refutation.");
+    if(l.type==="refutation"&&l.from===l.to) errs.push("A line cannot refute its own shape.");
+  });
+  return errs;
+}
+function num(d,n){ return d.nodes.indexOf(n)+1; }
+function nodeText(n){
+  if(n.shape==="square") return (n.witness||"Someone")+" asserts: "+(n.assertion||"");
+  if(n.shape==="triangle") return n.statement||"";
+  if(n.shape==="d") return n.generalization||"";
+  return n.statement||"";
+}
+function shapeLabel(n){
+  if(n.shape==="circle") return ROLES[n.role]||"Fact";
+  if(n.shape==="square") return "Testimonial assertion";
+  if(n.shape==="triangle") return n.kind==="rebuttal"?"Refutation of explanation":"Explanation";
+  return "Generalization";
+}
+
+/* ---------- layout: probandum on top, premises below, triangles to the side ---------- */
+function layout(d){
+  const byId={}; d.nodes.forEach(n=>byId[n.id]=n);
+  const rank={};
+  const ult=d.nodes.find(n=>n.shape==="circle"&&n.role==="ultimate");
+  function r(n, seen){
+    if(rank[n.id]!==undefined) return rank[n.id];
+    if(n===ult) return rank[n.id]=0;
+    seen=seen||{};
+    if(seen[n.id]) return 0; seen[n.id]=1;
+    let m=-1;
+    d.links.forEach(l=>{
+      if(l.from===n.id&&(l.type==="inference"||l.type==="refutation")){
+        const t=byId[l.to]; if(t) m=Math.max(m,r(t,Object.assign({},seen)));
+      }
+    });
+    return rank[n.id]=m+1;
+  }
+  d.nodes.forEach(n=>{
+    if(n.shape==="triangle"){
+      const l=d.links.find(x=>x.from===n.id&&(x.type==="explanation"||x.type==="rebuttal"));
+      rank[n.id]=l&&byId[l.to]?r(byId[l.to],{}):1;
+    }
+  });
+  d.nodes.forEach(n=>{ if(rank[n.id]===undefined) r(n,{}); });
+  const layers={};
+  d.nodes.forEach(n=>{ const k=rank[n.id]; (layers[k]=layers[k]||[]).push(n); });
+  Object.keys(layers).forEach(k=>{
+    const arr=layers[k];
+    const main=arr.filter(n=>n.shape!=="triangle"), tri=arr.filter(n=>n.shape==="triangle");
+    main.forEach(n=>{
+      let s=0,c=0;
+      d.links.forEach(l=>{ if(l.from===n.id&&byId[l.to]&&byId[l.to]._x!==undefined){s+=byId[l.to]._x;c++;} });
+      n._b=c?s/c:-1;
+    });
+    main.sort((a,b)=>(a._b<0?999:a._b)-(b._b<0?999:b._b));
+    tri.sort((a,b)=>{
+      const la=d.links.find(x=>x.from===a.id), lb=d.links.find(x=>x.from===b.id);
+      const ia=la?main.indexOf(byId[la.to]):-1, ib=lb?main.indexOf(byId[lb.to]):-1;
+      return ia-ib;
+    });
+    layers[k]=main.concat(tri);
+  });
+  const XG=190, YG=150, TR=30;
+  Object.keys(layers).forEach(k=>{
+    const arr=layers[k]; let x=0;
+    arr.forEach(n=>{
+      if(n.shape==="triangle"){
+        const l=d.links.find(x2=>x2.from===n.id);
+        const t=l&&byId[l.to];
+        n._x=(t&&t._x!==undefined?t._x:0)+170; n._y=rank[n.id]*YG+70;
+      }else{ n._x=x; n._y=rank[n.id]*YG+70; x+=XG; }
+    });
+    const xs=arr.map(n=>n._x), cx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2;
+    arr.forEach(n=>{ if(n.shape!=="triangle") n._x-=cx; });
+  });
+  let maxR=0; Object.keys(layers).forEach(k=>maxR=Math.max(maxR,+k));
+  return {rank:rank, maxRank:maxR};
+}
+
+/* ---------- renderer ---------- */
+const NS="http://www.w3.org/2000/svg";
+function el(tag, at, parent){
+  const e=document.createElementNS(NS,tag);
+  for(const k in at) e.setAttribute(k,at[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+function shapePath(n, x, y){
+  const R = n.shape==="d"?22:30;
+  if(n.shape==="circle"){
+    if(n.undermines){
+      const a0=Math.PI*0.22, a1=Math.PI*0.78;
+      const p=(a)=>[x+R*Math.cos(a), y-R*Math.sin(a)];
+      const s=p(a1), e=p(a0);
+      return {d:"M "+s[0].toFixed(1)+" "+s[1].toFixed(1)+" A "+R+" "+R+" 0 1 1 "+e[0].toFixed(1)+" "+e[1].toFixed(1), R:R};
+    }
+    return {d:"M "+(x-R)+" "+y+" a "+R+" "+R+" 0 1 0 "+(2*R)+" 0 a "+R+" "+R+" 0 1 0 "+(-2*R)+" 0", R:R};
+  }
+  if(n.shape==="square"){
+    const s=R*1.9;
+    if(n.undermines) return {d:"M "+(x-s/2)+" "+(y+s/2)+" L "+(x-s/2)+" "+(y-s/2)+" L "+(x+s/2)+" "+(y-s/2)+" L "+(x+s/2)+" "+(y+s/2), R:R};
+    return {d:"M "+(x-s/2)+" "+(y-s/2)+" h "+s+" v "+s+" h "+(-s)+" Z", R:R};
+  }
+  if(n.shape==="triangle"){
+    const w=64,h=52;
+    return {d:"M "+(x+w/2)+" "+y+" L "+(x-w/2)+" "+(y-h/2)+" L "+(x-w/2)+" "+(y+h/2)+" Z", R:32};
+  }
+  const w=30,h=44;
+  return {d:"M "+(x-w/2)+" "+(y-h/2)+" L "+(x-w/2)+" "+(y+h/2)+" L "+(x+w/2)+" "+(y+h/2)+" A "+(h/2)+" "+(h/2)+" 0 0 0 "+(x+w/2)+" "+(y-h/2)+" Z", R:26};
+}
+function renderChart(svg, d, opts){
+  opts=opts||{};
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const g=el("g",{},svg);
+  const defs=el("defs",{},svg);
+  const mk=(id)=>{
+    const m=el("marker",{id:id,viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:7,markerHeight:7,orient:"auto-start-reverse"},defs);
+    el("path",{d:"M 0 1 L 9 5 L 0 9 z",fill:"context-stroke"},m);
+  };
+  mk("arr"); mk("arrS");
+  layout(d);
+  const byId={}; d.nodes.forEach(n=>byId[n.id]=n);
+  // edges under nodes
+  d.links.forEach(l=>{
+    const a=byId[l.from], b=byId[l.to]; if(!a||!b) return;
+    const p=el("path",{d:edgePath(a,b,l), "class":"edge"+(l.strength==="strong"?" strong":"")+(l.strength==="weak"?" weak":"")},g);
+    if(l.type==="inference") p.setAttribute("marker-end","url(#arr)");
+    if(l.type==="refutation"){
+      p.setAttribute("marker-end","url(#arr)");
+      const mx=(a._x+b._x)/2, my=(a._y+b._y)/2;
+      el("circle",{cx:mx,cy:my,r:5,fill:"none",stroke:"var(--muted)","stroke-width":1.25},g);
+    }
+    if(l.type==="rebuttal"){
+      const mx=(a._x+b._x)/2, my=(a._y+b._y)/2;
+      el("path",{d:"M "+(mx-6)+" "+(my-6)+" L "+(mx+6)+" "+(my+6)+" M "+(mx+6)+" "+(my-6)+" L "+(mx-6)+" "+(my+6),
+        stroke:"var(--muted)","stroke-width":1.5,fill:"none"},g);
+    }
+    if(l.strength==="weak"){
+      const mx=(a._x+b._x)/2+10, my=(a._y+b._y)/2-8;
+      const t=el("text",{x:mx,y:my,"class":"edge-lbl"},g); t.textContent="?";
+    }
+    if(l.strength==="strong"&&l.type==="inference"){
+      p.setAttribute("marker-end","url(#arrS)");
+    }
+    p.style.cursor="pointer";
+    p.addEventListener("click",(ev)=>{ev.stopPropagation(); opts.onLink&&opts.onLink(l);});
+  });
+  // nodes
+  d.nodes.forEach(n=>{
+    const x=n._x, y=n._y, sp=shapePath(n,x,y);
+    const gn=el("g",{"class":"node"+(opts.sel===n.id?" sel":""),transform:"translate(0,0)"},g);
+    el("circle",{cx:x,cy:y,r:44,"class":"halo"},gn);
+    const frame=el("path",{d:sp.d,fill:"none",stroke:n.shape==="circle"&&n.role==="ultimate"?"var(--acid)":"var(--ink)","stroke-width":1.5,"class":"frame"},gn);
+    if(n.opposing){
+      el("path",{d:topDouble(n,x,y),fill:"none",stroke:"var(--muted)","stroke-width":1.25},gn);
+    }
+    const t=el("text",{x:x,y:y+5,"text-anchor":"middle","font-size":15},gn);
+    t.textContent=num(d,n);
+    let mx=x+22;
+    if(n.autoptic){ const s=el("text",{x:mx,y:y+4,"font-size":13,fill:"var(--dim)"},gn); s.textContent="\u221E"; mx+=14; }
+    if(n.noticed){ const s=el("text",{x:x-24,y:y-20,"font-size":13,fill:"var(--dim)"},gn); s.textContent="\u2019"; }
+    if(n.doubt){ const s=el("text",{x:x+20,y:y-18,"font-size":13,fill:"var(--warn)"},gn); s.textContent="?"; }
+    gn.addEventListener("click",(ev)=>{ev.stopPropagation(); opts.onNode&&opts.onNode(n);});
+  });
+  return {g:g, W:W, H:H};
+}
+function topDouble(n,x,y){
+  const R=30;
+  if(n.shape==="circle") return "M "+(x-R+8)+" "+(y-R+5)+" A "+R+" "+R+" 0 0 1 "+(x+R-8)+" "+(y-R+5);
+  const s=R*1.9;
+  return "M "+(x-s/2)+" "+(y-s/2+5)+" L "+(x+s/2)+" "+(y-s/2+5);
+}
+function edgePath(a,b,l){
+  if(l.type==="explanation"||l.type==="rebuttal"){
+    const y=b._y, x1=b._x+34, x2=a._x-36;
+    return "M "+x1+" "+y+" L "+(x2-2)+" "+y;
+  }
+  const x1=a._x, y1=a._y-34, x2=b._x, y2=b._y+36;
+  if(Math.abs(x1-x2)<4) return "M "+x1+" "+y1+" L "+x2+" "+(y2-2);
+  const my=(y1+y2)/2;
+  return "M "+x1+" "+y1+" C "+x1+" "+my+", "+x2+" "+my+", "+x2+" "+(y2-2);
+}
+
+/* ---------- app state ---------- */
+const S = {
+  view:"library", chartId:null, shared:null, sharedSaved:false,
+  selNode:null, selLink:null, sideTab:"keylist",
+  pan:{x:0,y:0,k:1}, editDraft:null
+};
+function allCharts(){
+  const lib=libLoad();
+  return [{id:"example", name:EXAMPLE.name, builtin:true, data:EXAMPLE}]
+    .concat(lib.map(e=>({id:e.id, name:e.name, updatedAt:e.updatedAt, builtin:false, data:e.data})));
+}
+function getChart(id){
+  if(id==="example") return {id:"example", name:EXAMPLE.name, builtin:true, data:EXAMPLE};
+  const e=libLoad().find(x=>x.id===id);
+  return e?{id:e.id,name:e.name,updatedAt:e.updatedAt,builtin:false,data:e.data}:null;
+}
+function currentData(){
+  if(S.shared) return S.shared.data;
+  const c=getChart(S.chartId); return c?c.data:EXAMPLE;
+}
+function currentName(){
+  if(S.shared) return S.shared.data.name+(S.sharedSaved?"":" (shared)");
+  const c=getChart(S.chartId); return c?c.name:"";
+}
+function saveDraftToLib(){
+  if(S.chartId==="example"||!S.chartId) return;
+  const lib=libLoad(), e=lib.find(x=>x.id===S.chartId);
+  if(e){ e.data=S.editDraft||e.data; e.name=(S.editDraft||e.data).name; e.updatedAt=Date.now(); libSave(lib); }
+}
+
+/* ---------- router ---------- */
+function go(view, arg){
+  S.view=view;
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  document.getElementById("v-"+view).classList.add("on");
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.view===view));
+  if(view==="library") renderLibrary();
+  if(view==="chart") openChart(arg||S.chartId||localStorage.getItem(LS_LAST)||"example");
+  if(view==="build") openBuild(arg||S.chartId);
+  if(view==="key") renderKey();
+  window.scrollTo(0,0);
+}
+document.getElementById("tabs").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(b) go(b.dataset.view);
+});
+
+/* ---------- library ---------- */
+function renderLibrary(){
+  const slot=document.getElementById("continue-slot");
+  const last=localStorage.getItem(LS_LAST);
+  const charts=allCharts();
+  const lc=charts.find(c=>c.id===last);
+  if(lc&&lc.id!=="example"){
+    slot.innerHTML="";
+    const d=document.createElement("div"); d.className="continue";
+    d.innerHTML='<span class="micro">Continue where you left off</span><span class="t">\u2014</span>';
+    d.querySelector(".t").innerHTML=""; 
+    const t=document.createElement("span"); t.className="t";
+    t.innerHTML=""; t.appendChild(document.createTextNode(lc.name));
+    const b=document.createElement("button"); b.className="btn sm primary"; b.textContent="Continue";
+    b.onclick=()=>go("chart",lc.id);
+    d.appendChild(t); d.appendChild(b); slot.appendChild(d);
+  } else slot.innerHTML="";
+  const box=document.getElementById("lib-cards"); box.innerHTML="";
+  charts.forEach(c=>{
+    const card=document.createElement("div"); card.className="card";
+    const nn=c.data.nodes.length, nl=c.data.links.length;
+    const shapes=[0,0,0,0];
+    c.data.nodes.forEach(n=>{shapes[{circle:0,square:1,triangle:2,d:3}[n.shape]]++;});
+    card.innerHTML='<span class="badge'+(c.builtin?'"':' acid"')+'">'+(c.builtin?"Example":"My chart")+'</span>'
+      +'<h3></h3><div class="meta"><span><b>'+nn+'</b> shapes</span><span><b>'+nl+'</b> lines</span>'
+      +'<span>\u25CB'+shapes[0]+' \u25A1'+shapes[1]+' \u25B3'+shapes[2]+' D'+shapes[3]+'</span></div>'
+      +'<div class="row"></div>';
+    card.querySelector("h3").textContent=c.name;
+    const row=card.querySelector(".row");
+    const open=document.createElement("button"); open.className="btn sm primary"; open.textContent="Open";
+    open.onclick=()=>{localStorage.setItem(LS_LAST,c.id); go("chart",c.id);};
+    row.appendChild(open);
+    if(!c.builtin){
+      const ed=document.createElement("button"); ed.className="btn sm"; ed.textContent="Edit";
+      ed.onclick=()=>go("build",c.id); row.appendChild(ed);
+      const sh=document.createElement("button"); sh.className="btn sm ghost"; sh.textContent="Share";
+      sh.onclick=()=>{ shareURL(c.data,url=>{navigator.clipboard.writeText(url).then(()=>{sh.textContent="Copied";setTimeout(()=>sh.textContent="Share",1500);});}); };
+      row.appendChild(sh);
+      const del=document.createElement("button"); del.className="btn sm ghost"; del.textContent="Delete";
+      del.style.color="var(--bad)";
+      del.onclick=()=>{ if(confirm("Delete \""+c.name+"\"?")){ libSave(libLoad().filter(x=>x.id!==c.id)); renderLibrary(); } };
+      row.appendChild(del);
+    }else{
+      const cp=document.createElement("button"); cp.className="btn sm"; cp.textContent="Copy to my charts";
+      cp.onclick=()=>{
+        const lib=libLoad(); const id=uid("c");
+        const data=JSON.parse(JSON.stringify(EXAMPLE)); data.name=EXAMPLE.name.replace(" (example)","")+" (copy)";
+        lib.unshift({id:id,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
+        localStorage.setItem(LS_LAST,id); go("chart",id);
+      };
+      row.appendChild(cp);
+    }
+    box.appendChild(card);
+  });
+}
+document.getElementById("lib-new").onclick=()=>{
+  const lib=libLoad(); const id=uid("c");
+  const data=blankChart("Untitled chart");
+  lib.unshift({id:id,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
+  go("build",id);
+};
+
+/* ---------- chart view ---------- */
+const svg=document.getElementById("svg"), canvasBox=document.getElementById("canvas");
+let chartGeom=null;
+function openChart(id){
+  const fromShared=!!S.shared;
+  if(!fromShared){ S.chartId=id; S.shared=null; }
+  S.selNode=null; S.selLink=null; S.sideTab="keylist";
+  const sw=document.getElementById("chart-switch"); sw.innerHTML="";
+  allCharts().forEach(c=>{
+    const o=document.createElement("option"); o.value=c.id; o.textContent=c.name+(c.builtin?" (example)":"");
+    if(!S.shared&&c.id===S.chartId) o.selected=true; sw.appendChild(o);
+  });
+  if(S.shared){
+    const o=document.createElement("option"); o.value="__shared"; o.textContent=currentName(); o.selected=true;
+    sw.appendChild(o);
+  }
+  renderShareSlot(); drawChart(); renderSide(); renderStats();
+  if(!fromShared) localStorage.setItem(LS_LAST,id);
+  fitView(false);
+}
+document.getElementById("chart-switch").addEventListener("change",e=>{
+  const v=e.target.value;
+  if(v==="__shared") return;
+  S.shared=null; go("chart",v);
+});
+function renderShareSlot(){
+  const slot=document.getElementById("share-slot"); slot.innerHTML="";
+  if(!S.shared) return;
+  const d=document.createElement("div"); d.className="share-banner";
+  const t=document.createElement("span"); t.className="t";
+  t.textContent=S.sharedSaved
+    ? "This chart was shared with you. It is now in your collection."
+    : "This chart was shared with you. Explore it freely, save it to your collection if you want to keep it.";
+  d.appendChild(t);
+  if(!S.sharedSaved){
+    const b=document.createElement("button"); b.className="btn sm primary"; b.textContent="Save to my collection";
+    b.onclick=()=>{
+      const lib=libLoad(); const id=uid("c");
+      const data=JSON.parse(JSON.stringify(S.shared.data));
+      lib.unshift({id:id,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
+      S.sharedSaved=true; S.shared=null; S.chartId=id;
+      localStorage.setItem(LS_LAST,id); go("chart",id);
+    };
+    d.appendChild(b);
+  }
+  slot.appendChild(d);
+}
+function drawChart(){
+  const d=currentData();
+  chartGeom=renderChart(svg,d,{sel:S.selNode,
+    onNode:(n)=>{S.selNode=n.id;S.selLink=null;S.sideTab="detail";drawChart();renderSide();},
+    onLink:(l)=>{S.selLink=l.id;S.selNode=null;S.sideTab="detail";drawChart();renderSide();}});
+  applyPan();
+}
+function renderStats(){
+  const d=currentData();
+  const shapes=[0,0,0,0];
+  d.nodes.forEach(n=>shapes[{circle:0,square:1,triangle:2,d:3}[n.shape]]++);
+  const box=document.getElementById("chart-stats");
+  box.innerHTML='<div><b>'+d.nodes.length+'</b><span>shapes</span></div>'
+    +'<div><b>'+d.links.length+'</b><span>lines</span></div>'
+    +'<div><b>'+shapes[0]+'</b><span>facts \u25CB</span></div>'
+    +'<div><b>'+shapes[1]+'</b><span>testimony \u25A1</span></div>'
+    +'<div><b>'+shapes[2]+'</b><span>explan. \u25B3</span></div>'
+    +'<div><b>'+shapes[3]+'</b><span>general. D</span></div>';
+}
+function renderSide(){
+  const body=document.getElementById("side-body");
+  document.querySelectorAll(".side-tabs button").forEach(b=>b.classList.toggle("on",b.dataset.side===S.sideTab));
+  const d=currentData();
+  if(S.sideTab==="keylist"){
+    const ol=document.createElement("ol"); ol.className="keylist";
+    d.nodes.forEach(n=>{
+      const li=document.createElement("li");
+      const kn=document.createElement("span"); kn.className="kn"; kn.textContent=num(d,n);
+      const ks=document.createElement("span"); ks.className="ks"; ks.textContent=shapeLabel(n);
+      const tx=document.createElement("span"); tx.textContent=nodeText(n);
+      li.appendChild(kn); li.appendChild(ks); li.appendChild(tx);
+      li.style.cursor="pointer";
+      li.onclick=()=>{S.selNode=n.id;S.selLink=null;S.sideTab="detail";drawChart();renderSide();};
+      ol.appendChild(li);
+    });
+    body.innerHTML=""; 
+    if(!d.nodes.length){ body.innerHTML='<div class="empty-note">No shapes yet. Open Build to add the first one.</div>'; return; }
+    const h=document.createElement("div"); h.className="micro"; h.style.marginBottom="8px"; h.textContent="Key list";
+    body.appendChild(h); body.appendChild(ol);
+  }else{
+    body.innerHTML="";
+    const wrap=document.createElement("div"); wrap.className="detail";
+    if(S.selNode){
+      const n=d.nodes.find(x=>x.id===S.selNode);
+      if(n){
+        const tag=document.createElement("span"); tag.className="shape-tag";
+        tag.textContent="#"+num(d,n)+" \u00B7 "+shapeLabel(n);
+        const h=document.createElement("h4"); h.textContent=nodeText(n);
+        wrap.appendChild(tag); wrap.appendChild(h);
+        const dl=document.createElement("dl"); dl.className="kv";
+        const row=(k,v)=>{ if(v===undefined||v===""||v===false) return;
+          const dt=document.createElement("dt"); dt.textContent=k;
+          const dd=document.createElement("dd"); dd.textContent=v; dl.appendChild(dt); dl.appendChild(dd); };
+        if(n.shape==="circle"){ row("Role",ROLES[n.role]); row("Statement",n.statement); }
+        if(n.shape==="square"){ row("Witness",n.witness); row("Assertion",n.assertion); }
+        if(n.shape==="triangle"){ row("Kind",n.kind==="rebuttal"?"Refutation of explanation":"Explanation"); row("Statement",n.statement); }
+        if(n.shape==="d"){ row("Generalization",n.generalization); }
+        const marks=[];
+        if(n.undermines) marks.push("undermines the conclusion (open base)");
+        if(n.opposing) marks.push("offered by the opposing party (doubled top)");
+        if(n.noticed) marks.push("judicially noticed (')");
+        if(n.doubt) marks.push("held in doubt (?)");
+        if(n.autoptic) marks.push("perceived by the senses (\u221E)");
+        if(marks.length) row("Marks",marks.join("; "));
+        const linked=d.links.filter(l=>l.from===n.id||l.to===n.id);
+        if(linked.length) row("Lines",linked.length+" connected");
+        wrap.appendChild(dl);
+      }
+    }else if(S.selLink){
+      const l=d.links.find(x=>x.id===S.selLink);
+      if(l){
+        const a=d.nodes.find(x=>x.id===l.from), b=d.nodes.find(x=>x.id===l.to);
+        const tag=document.createElement("span"); tag.className="shape-tag"; tag.textContent=LINES[l.type].name;
+        const h=document.createElement("h4");
+        h.textContent=a?("#"+num(d,a)+" \u2192 #"+num(d,b)):l.type;
+        const p=document.createElement("p"); p.style.cssText="font-size:12px;color:var(--muted)";
+        p.textContent=LINES[l.type].guide;
+        const dl=document.createElement("dl"); dl.className="kv";
+        const row=(k,v)=>{ const dt=document.createElement("dt"); dt.textContent=k;
+          const dd=document.createElement("dd"); dd.textContent=v; dl.appendChild(dt); dl.appendChild(dd); };
+        row("Strength",l.strength==="strong"?"Strong":l.strength==="weak"?"Weak":"Neutral");
+        if(l.composite) row("Composite","Linked with other premises");
+        wrap.appendChild(tag); wrap.appendChild(h); wrap.appendChild(p); wrap.appendChild(dl);
+      }
+    }else{
+      wrap.innerHTML='<div class="empty-note">Select a shape or a line in the chart, or an entry in the key list.</div>';
+    }
+    body.appendChild(wrap);
+  }
+}
+document.querySelectorAll(".side-tabs button").forEach(b=>b.addEventListener("click",()=>{
+  S.sideTab=b.dataset.side; renderSide();
+}));
+svg.addEventListener("click",()=>{ if(S.selNode||S.selLink){S.selNode=S.selLink=null;drawChart();renderSide();} });
+
+/* pan / zoom */
+function applyPan(){
+  if(!chartGeom) return;
+  const g=chartGeom.g;
+  g.setAttribute("transform","translate("+S.pan.x+","+S.pan.y+") scale("+S.pan.k+")");
+}
+function fitView(anim){
+  const d=currentData(); if(!d.nodes.length) return;
+  const xs=d.nodes.map(n=>n._x), ys=d.nodes.map(n=>n._y);
+  const x0=Math.min.apply(null,xs)-90, x1=Math.max.apply(null,xs)+90;
+  const y0=Math.min.apply(null,ys)-80, y1=Math.max.apply(null,ys)+90;
+  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const k=Math.min(W/(x1-x0), H/(y1-y0), 1.6);
+  S.pan.k=k; S.pan.x=W/2-(x0+x1)/2*k; S.pan.y=H/2-(y0+y1)/2*k;
+  applyPan();
+}
+function zoomAt(f, cx, cy){
+  const k2=Math.min(4,Math.max(.25,S.pan.k*f));
+  const s=k2/S.pan.k;
+  S.pan.x=cx-(cx-S.pan.x)*s; S.pan.y=cy-(cy-S.pan.y)*s; S.pan.k=k2;
+  applyPan();
+}
+document.getElementById("z-in").onclick=()=>zoomAt(1.25,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
+document.getElementById("z-out").onclick=()=>zoomAt(.8,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
+document.getElementById("z-fit").onclick=()=>fitView(true);
+document.getElementById("btn-fit").onclick=()=>fitView(true);
+document.getElementById("btn-edit").onclick=()=>{
+  if(S.shared){ alert("Save the shared chart to your collection before editing it."); return; }
+  go("build",S.chartId);
+};
+document.getElementById("btn-share").onclick=()=>{
+  shareURL(currentData(),url=>{
+    navigator.clipboard.writeText(url).then(()=>{
+      const b=document.getElementById("btn-share"); b.textContent="Copied";
+      setTimeout(()=>b.textContent="Share link",1600);
+    });
+  });
+};
+(function(){
+  let drag=null, pinch=0;
+  const pos=(e)=>{ const r=svg.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+  svg.addEventListener("pointerdown",e=>{ svg.setPointerCapture(e.pointerId); drag={p:pos(e),x:S.pan.x,y:S.pan.y}; });
+  svg.addEventListener("pointermove",e=>{
+    if(!drag) return;
+    const p=pos(e); S.pan.x=drag.x+(p[0]-drag.p[0]); S.pan.y=drag.y+(p[1]-drag.p[1]); applyPan();
+  });
+  const up=()=>{drag=null;};
+  svg.addEventListener("pointerup",up); svg.addEventListener("pointercancel",up);
+  svg.addEventListener("wheel",e=>{ e.preventDefault(); const p=pos(e); zoomAt(e.deltaY<0?1.12:0.89,p[0],p[1]); },{passive:false});
+  svg.addEventListener("touchmove",e=>{
+    if(e.touches.length===2){
+      e.preventDefault();
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      if(pinch) { const r=svg.getBoundingClientRect();
+        zoomAt(d/pinch, r.width/2, r.height/2); }
+      pinch=d; drag=null;
+    }
+  },{passive:false});
+  svg.addEventListener("touchend",()=>{pinch=0;});
+  document.addEventListener("keydown",e=>{
+    if(S.view!=="chart") return;
+    if(e.key==="+"||e.key==="=") zoomAt(1.2,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
+    if(e.key==="-") zoomAt(.84,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);
+    if(e.key==="0") fitView(true);
+    if(e.key==="Escape"){S.selNode=S.selLink=null;drawChart();renderSide();}
+  });
+  window.addEventListener("resize",()=>{ if(S.view==="chart") drawChart(); });
+})();
+
+/* ---------- build view ---------- */
+function openBuild(id){
+  if(id==="example"){
+    const lib=libLoad(); const nid=uid("c");
+    const data=JSON.parse(JSON.stringify(EXAMPLE)); data.name=data.name.replace(" (example)","")+" (copy)";
+    lib.unshift({id:nid,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
+    id=nid;
+  }
+  S.chartId=id; S.shared=null;
+  const c=getChart(id); if(!c){ go("library"); return; }
+  S.editDraft=JSON.parse(JSON.stringify(c.data));
+  S.editNode=null; S.editLink=null; S.newShape="circle";
+  document.getElementById("build-title").textContent="Build";
+  renderBuild();
+}
+function draft(){ return S.editDraft; }
+function syncDraft(){ saveDraftToLib(); }
+function renderBuild(){
+  const d=draft(); if(!d) return;
+  document.getElementById("b-name").value=d.name;
+  // nodes
+  const nb=document.getElementById("b-nodes"); nb.innerHTML="";
+  if(!d.nodes.length) nb.innerHTML='<div class="empty-note">No shapes yet. Add the first one below, start with the ultimate probandum.</div>';
+  d.nodes.forEach(n=>{
+    const r=document.createElement("div"); r.className="nrow";
+    r.innerHTML='<svg class="sym" viewBox="-40 -40 80 80"></svg><div class="tx"><div class="s1"></div><div class="s2"></div></div><div class="acts"></div>';
+    const mini=r.querySelector("svg");
+    const sp=shapePath(n,0,0);
+    el("path",{d:sp.d,fill:"none",stroke:"var(--ink)","stroke-width":3},mini);
+    const t=el("text",{x:0,y:7,"text-anchor":"middle","font-size":22,fill:"var(--ink)"},mini);
+    t.textContent=num(d,n);
+    r.querySelector(".s1").textContent=nodeText(n);
+    r.querySelector(".s2").textContent="#"+num(d,n)+" \u00B7 "+shapeLabel(n);
+    const acts=r.querySelector(".acts");
+    const ed=document.createElement("button"); ed.className="icon-btn ed"; ed.textContent="Edit";
+    ed.onclick=()=>{S.editNode=n.id;S.newShape=n.shape;renderNodeForm();};
+    const del=document.createElement("button"); del.className="icon-btn"; del.textContent="Del";
+    del.onclick=()=>{ d.nodes=d.nodes.filter(x=>x.id!==n.id);
+      d.links=d.links.filter(l=>l.from!==n.id&&l.to!==n.id); syncDraft(); renderBuild(); drawChartSafe(); };
+    acts.appendChild(ed); acts.appendChild(del);
+    nb.appendChild(r);
+  });
+  renderShapePick(); renderNodeForm(); renderLinks(); renderLinkForm(); renderValid();
+}
+function drawChartSafe(){}
+document.getElementById("b-name").addEventListener("input",e=>{
+  draft().name=e.target.value.slice(0,80); syncDraft();
+});
+function renderShapePick(){
+  const box=document.getElementById("shape-pick"); box.innerHTML="";
+  Object.keys(SHAPES).forEach(k=>{
+    const b=document.createElement("button");
+    b.className="shape-opt"+(S.newShape===k?" on":"");
+    b.innerHTML='<svg width="40" height="40" viewBox="-40 -40 80 80"></svg><div class="sn">'+SHAPES[k].name+'</div><div class="sd">'+SHAPES[k].guide+'</div>';
+    const mini=b.querySelector("svg");
+    const sp=shapePath({shape:k},0,0);
+    el("path",{d:sp.d,fill:"none",stroke:k==="circle"?"var(--acid)":"var(--ink)","stroke-width":3},mini);
+    b.onclick=()=>{S.newShape=k;S.editNode=null;renderShapePick();renderNodeForm();};
+    box.appendChild(b);
+  });
+}
+function fld(label,hint){
+  return {label:label,hint:hint};
+}
+function renderNodeForm(){
+  const d=draft(), box=document.getElementById("node-form"); box.innerHTML="";
+  const editing=S.editNode?d.nodes.find(n=>n.id===S.editNode):null;
+  const shape=S.newShape;
+  const vals=editing||{shape:shape,undermines:false,opposing:false,noticed:false,doubt:false,autoptic:false};
+  const form=document.createElement("div");
+  const addText=(lab,guide,key)=>{
+    const l=document.createElement("label"); l.className="f"; l.textContent=lab;
+    const i=document.createElement("textarea"); i.value=vals[key]||"";
+    i.dataset.k=key;
+    const h=document.createElement("div"); h.className="hint"; h.textContent=guide;
+    form.appendChild(l); form.appendChild(i); form.appendChild(h);
+  };
+  const addShort=(lab,guide,key)=>{
+    const l=document.createElement("label"); l.className="f"; l.textContent=lab;
+    const i=document.createElement("input"); i.type="text"; i.value=vals[key]||"";
+    i.dataset.k=key;
+    const h=document.createElement("div"); h.className="hint"; h.textContent=guide;
+    form.appendChild(l); form.appendChild(i); form.appendChild(h);
+  };
+  if(shape==="circle"){
+    const l=document.createElement("label"); l.className="f"; l.textContent="Role";
+    const s=document.createElement("select"); s.dataset.k="role";
+    Object.keys(ROLES).forEach(k=>{ const o=document.createElement("option"); o.value=k; o.textContent=ROLES[k];
+      if(vals.role===k) o.selected=true; s.appendChild(o); });
+    const h=document.createElement("div"); h.className="hint";
+    h.textContent="Ultimate: the one thing to be proved. Penultimate: a stepping-stone. Evidence: a fact that bears on a probandum. Other fact: anything else Wigmore would circle.";
+    form.appendChild(l); form.appendChild(s); form.appendChild(h);
+    addText("Key-list statement","The exact proposition, as it will read in the numbered key list.", "statement");
+    const au=document.createElement("label"); au.className="f"; au.textContent="Sensory evidence";
+    const cw=document.createElement("div"); cw.className="checks";
+    cw.innerHTML='<label><input type="checkbox" data-k="autoptic"> Perceived by the senses, not by testimony (\u221E mark)</label>';
+    if(vals.autoptic) cw.querySelector("input").checked=true;
+    const hh=document.createElement("div"); hh.className="hint";
+    hh.textContent="Tick this for autoptic proference: something seen, heard, or handled, like the printed log held up in court.";
+    form.appendChild(au); form.appendChild(cw); form.appendChild(hh);
+  }
+  if(shape==="square"){
+    addShort("Witness","Who said it. Name the source of the testimony.","witness");
+    addText("Assertion","Exactly what they asserted, in their own terms as near as you can give them.","assertion");
+  }
+  if(shape==="triangle"){
+    const l=document.createElement("label"); l.className="f"; l.textContent="Kind";
+    const s=document.createElement("select"); s.dataset.k="kind";
+    [["explanation","Explanation: explains away a conclusion or lessens its force"],
+     ["rebuttal","Refutation of explanation: refutes the explanation, corroborates the original"]].forEach(k=>{
+      const o=document.createElement("option"); o.value=k[0]; o.textContent=k[1];
+      if(vals.kind===k[0]) o.selected=true; s.appendChild(o); });
+    form.appendChild(l); form.appendChild(s);
+    addText("Statement","The objection, or the refutation of the objection, stated as a proposition.","statement");
+  }
+  if(shape==="d"){
+    addText("Generalization","The general rule that carries the inference, stated plainly enough to argue with. Example: witnesses generally report what they saw accurately.","generalization");
+  }
+  const mk=document.createElement("div"); mk.className="f"; mk.textContent="Marks";
+  const cw=document.createElement("div"); cw.className="checks";
+  cw.innerHTML='<label><input type="checkbox" data-k="undermines"> Undermines the conclusion (open base)</label>'
+    +'<label><input type="checkbox" data-k="opposing"> Offered by the opposing party (doubled top)</label>'
+    +'<label><input type="checkbox" data-k="noticed"> Judicially noticed (\u2019)</label>'
+    +'<label><input type="checkbox" data-k="doubt"> Held in doubt (?)</label>';
+  ["undermines","opposing","noticed","doubt"].forEach(k=>{ if(vals[k]) cw.querySelector('[data-k="'+k+'"]').checked=true; });
+  form.appendChild(mk); form.appendChild(cw);
+  const row=document.createElement("div"); row.style.cssText="display:flex;gap:8px;margin-top:16px";
+  const save=document.createElement("button"); save.className="btn primary sm";
+  save.textContent=editing?"Save shape":"Add shape";
+  save.onclick=()=>{
+    const v={shape:shape};
+    form.querySelectorAll("[data-k]").forEach(inp=>{
+      const k=inp.dataset.k;
+      v[k]=inp.type==="checkbox"?inp.checked:inp.value;
+    });
+    if(editing){ Object.assign(editing,v); }
+    else{ v.id=uid("n"); d.nodes.push(Object.assign(v,{id:v.id})); }
+    S.editNode=null; syncDraft(); renderBuild();
+  };
+  row.appendChild(save);
+  if(editing){ const c=document.createElement("button"); c.className="btn sm ghost"; c.textContent="Cancel";
+    c.onclick=()=>{S.editNode=null;renderNodeForm();}; row.appendChild(c); }
+  form.appendChild(row);
+  box.appendChild(form);
+}
+function nodeOpt(n,d){
+  const o=document.createElement("option"); o.value=n.id;
+  o.textContent="#"+num(d,n)+" \u00B7 "+shapeLabel(n);
+  return o;
+}
+function renderLinks(){
+  const d=draft(), box=document.getElementById("b-links"); box.innerHTML="";
+  if(!d.links.length) box.innerHTML='<div class="empty-note">No lines yet. Draw the first inference.</div>';
+  d.links.forEach(l=>{
+    const a=d.nodes.find(n=>n.id===l.from), b=d.nodes.find(n=>n.id===l.to);
+    const r=document.createElement("div"); r.className="nrow";
+    r.innerHTML='<div class="tx"><div class="s1"></div><div class="s2"></div></div><div class="acts"></div>';
+    r.querySelector(".s1").textContent=(a?"#"+num(d,a):"?")+" \u2192 "+(b?"#"+num(d,b):"?");
+    r.querySelector(".s2").textContent=LINES[l.type].name+" \u00B7 "+l.strength
+      +(l.composite?" \u00B7 composite":"");
+    const del=document.createElement("button"); del.className="icon-btn"; del.textContent="Del";
+    del.onclick=()=>{ d.links=d.links.filter(x=>x.id!==l.id); syncDraft(); renderBuild(); };
+    r.querySelector(".acts").appendChild(del);
+    box.appendChild(r);
+  });
+}
+function renderLinkForm(){
+  const d=draft(), box=document.getElementById("link-form"); box.innerHTML="";
+  if(d.nodes.length<2){ box.innerHTML='<div class="empty-note">Add at least two shapes first.</div>'; return; }
+  const form=document.createElement("div");
+  const mkSel=(lab,guide)=>{
+    const l=document.createElement("label"); l.className="f"; l.textContent=lab;
+    const s=document.createElement("select");
+    const h=document.createElement("div"); h.className="hint"; h.textContent=guide;
+    form.appendChild(l); form.appendChild(s); form.appendChild(h); return s;
+  };
+  const fs=mkSel("From","The premise, the evidence, the explanation: where the line starts.");
+  const ts=mkSel("To","The conclusion it supports, refutes, or explains away.");
+  d.nodes.forEach(n=>{ fs.appendChild(nodeOpt(n,d)); ts.appendChild(nodeOpt(n,d)); });
+  if(d.nodes[1]) ts.selectedIndex=1;
+  const ty=mkSel("Line type","Each line means exactly one thing. Invalid pairings are rejected on save.");
+  Object.keys(LINES).forEach(k=>{ const o=document.createElement("option"); o.value=k;
+    o.textContent=LINES[k].name+" \u2014 "+LINES[k].guide; ty.appendChild(o); });
+  const st=mkSel("Strength","Preliminary assessment while building: strong (doubled mark), neutral, or weak (?).");
+  ["strong","neutral","weak"].forEach(k=>{ const o=document.createElement("option"); o.value=k;
+    o.textContent=k[0].toUpperCase()+k.slice(1); if(k==="neutral")o.selected=true; st.appendChild(o); });
+  const cl=document.createElement("label"); cl.className="f"; cl.textContent="Composite group";
+  const ci=document.createElement("input"); ci.type="text"; ci.placeholder="Leave blank, or a label like A to link premises together";
+  const ch=document.createElement("div"); ch.className="hint";
+  ch.textContent="Premises sharing a group letter are drawn as one composite, linked argument.";
+  form.appendChild(cl); form.appendChild(ci); form.appendChild(ch);
+  const add=document.createElement("button"); add.className="btn primary sm"; add.style.marginTop="14px";
+  add.textContent="Add line";
+  const msg=document.createElement("div"); msg.className="hint"; msg.style.color="var(--bad)";
+  add.onclick=()=>{
+    const l={id:uid("l"),from:fs.value,to:ts.value,type:ty.value,strength:st.value,
+      composite:ci.value.trim()||null};
+    const trial=JSON.parse(JSON.stringify(d)); trial.links.push(l);
+    const errs=validate(trial).filter(e=>e.indexOf("line")>-1||e.indexOf("Line")>-1||e.indexOf("Inference")>-1||e.indexOf("triangle")>-1||e.indexOf("Duplicate")>-1);
+    const before=validate(d).length, after=validate(trial).length;
+    if(after>before){
+      msg.textContent=validate(trial).find(e=>validate(d).indexOf(e)===-1)||"That line is not allowed.";
+      return;
+    }
+    d.links.push(l); syncDraft(); renderBuild();
+  };
+  form.appendChild(add); form.appendChild(msg);
+  box.appendChild(form);
+}
+function renderValid(){
+  const d=draft(), box=document.getElementById("valid-box");
+  const errs=validate(d);
+  const shareBtn=document.getElementById("b-share");
+  if(!errs.length){
+    box.innerHTML='<div class="ok-note">Valid Wigmore chart. Every shape numbered, every line well-formed.</div>';
+    shareBtn.disabled=false;
+  }else{
+    const u=document.createElement("ul"); u.className="errs";
+    errs.forEach(e=>{ const li=document.createElement("li"); li.textContent=e; u.appendChild(li); });
+    box.innerHTML=""; box.appendChild(u);
+    shareBtn.disabled=true;
+  }
+}
+document.getElementById("b-share").onclick=()=>{
+  shareURL(draft(),url=>{
+    navigator.clipboard.writeText(url).then(()=>{
+      const b=document.getElementById("b-share"); b.textContent="Copied";
+      setTimeout(()=>b.textContent="Copy share link",1600);
+    });
+  });
+};
+document.getElementById("b-done").onclick=()=>{ localStorage.setItem(LS_LAST,S.chartId); go("chart",S.chartId); };
+document.getElementById("b-delete").onclick=()=>{
+  if(!confirm("Delete this chart?")) return;
+  libSave(libLoad().filter(x=>x.id!==S.chartId));
+  go("library");
+};
+
+/* ---------- schema reference ---------- */
+function renderKey(){
+  const grid=document.getElementById("key-grid"); grid.innerHTML="";
+  const symSVG=(shape)=>{
+    const sp=shapePath({shape:shape},0,0);
+    return '<svg width="72" height="56" viewBox="-45 -35 90 70"><path d="'+sp.d+'" fill="none" stroke="#b8f34b" stroke-width="2.5"/></svg>';
+  };
+  const cards=[
+    ["\u25CB Circle","Fact",
+     "Any claimed fact that is not testimony and not an explanation: probanda at every level, circumstantial evidence, everything else. Carries a role: ultimate probandum, penultimate probandum, evidence, or other fact.",
+     "Wigmore (1913), shapes \u00A75-7"],
+    ["\u25A1 Square","Testimonial assertion",
+     "The fact that someone said something: a witness and the assertion, recorded separately. Squares are the chart's way of keeping the speaker distinct from the claim.",
+     "Wigmore (1913), shape \u00A75"],
+    ["\u25B3 Triangle","Explanation",
+     "An objection that explains away a conclusion or lessens its force, or the refutation of such an objection. Triangles sit beside what they engage, pointing at it horizontally.",
+     "Wigmore (1913), shape \u00A76"],
+    ["D","Generalization",
+     "The inference warrant: the general rule that lets evidence support a conclusion. Stated plainly enough to argue with, drawn as a capital D.",
+     "Wigmore (1937); Goodwin (2000)"],
+    ["\u2191","Inference",
+     "Reasoning upward from premise to conclusion. Several premises may join into one composite, a linked argument drawn as a single step.",
+     "Wigmore (1913), lines \u00A71"],
+    ["\u2191\u25CB","Refutation",
+     "A premise offered against a conclusion: a vertical arrow marked with a circle, pointing at the conclusion it refutes.",
+     "Wigmore (1913), lines \u00A72"],
+    ["\u2192","Explanation line",
+     "A horizontal line running right from the conclusion objected to, toward the triangle that explains it away.",
+     "Wigmore (1913), lines \u00A73"],
+    ["\u2192\u2715","Refutation of explanation",
+     "A horizontal line marked with a cross: the explanation is refuted, and the original conclusion stands corroborated.",
+     "Wigmore (1913), lines \u00A74"],
+    ["?","Strength",
+     "A preliminary weak assessment is marked ?; a strong one doubles the mark. Final review records weakness with a tick and strength with a cross.",
+     "Wigmore (1913), on strength"],
+    ["\u25CB\u0338","Marks",
+     "Open base: the fact undermines the ultimate conclusion. Doubled top: offered by the opposing party. \u2019: judicially noticed. \u221E with a circle: perceived by the senses. Every shape is numbered into the key list.",
+     "Wigmore (1913), markings"]
+  ];
+  cards.forEach(c=>{
+    const d=document.createElement("div"); d.className="key-card";
+    d.innerHTML='<div class="micro">'+c[0]+'</div><h4>'+c[1]+'</h4><p>'+c[2]+'</p><div class="src">'+c[3]+'</div>';
+    grid.appendChild(d);
+  });
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  const h=location.hash;
+  if(h.indexOf("#d=")===0){
+    try{
+      const data=await decodeShare(h.slice(3));
+      const errs=validate(data);
+      S.shared={data:data, valid:!errs.length};
+      S.sharedSaved=false;
+      S.view="chart";
+      document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+      document.getElementById("v-chart").classList.add("on");
+      document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.view==="chart"));
+      openChart(null);
+      if(errs.length){
+        const slot=document.getElementById("share-slot");
+        const w=document.createElement("div"); w.className="errs";
+        w.innerHTML="<b>Shared chart has schema problems:</b><ul>"+errs.map(e=>"<li>"+e+"</li>").join("")+"</ul>";
+        slot.appendChild(w);
+      }
+      return;
+    }catch(e){
+      document.getElementById("v-library").classList.add("on");
+      const box=document.getElementById("lib-cards");
+      box.innerHTML='<div class="errs">That share link could not be read. It may be truncated or corrupted.</div>';
+      return;
+    }
+  }
+  go("library");
+}
+boot();
+</script>
+</body>
+</html>

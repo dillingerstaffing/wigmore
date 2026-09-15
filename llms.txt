@@ -1,0 +1,30 @@
+# Wigmore
+
+Wigmore (https://dillingerstaffing.github.io/wigmore/) is a free browser playground
+for Wigmorean evidence analysis, the charting method of John Henry Wigmore
+(The Principles of Judicial Proof, 1913; The Science of Judicial Proof, 1937).
+
+What it does:
+- Create evidence charts using only Wigmore's own elements: circles (facts and
+  probanda), squares (testimonial assertions), horizontal triangles (explanations
+  and refutations of explanations), and D-shapes (generalizations, the inference
+  warrants). Four line types: inference, refutation, explanation, refutation of
+  explanation. Marks for strength, undermining facts, opposing-party sources,
+  judicial notice, doubt, and sensory (autoptic) evidence.
+- Every shape is numbered into a key list, as Wigmore drew it.
+- Explore charts with pan, zoom, and a detail panel.
+- Share any chart with a permalink: the chart data is embedded in the URL
+  (compressed), so there is no backend and no account.
+- Opening a shared chart offers a one-tap save into the visitor's own
+  collection (browser localStorage).
+
+Strictness: the builder validates every chart against the Wigmore schema and
+refuses lines that the schema does not allow (e.g. only a triangle can explain,
+inference lines conclude in circles, exactly one ultimate probandum).
+
+Schema sources: Wigmore (1913, 1937); the symbol key recovered by Jean Goodwin
+("Wigmore's Chart Method", Informal Logic, 2000); simplified conventions after
+Anderson (1999) and Anderson, Schum & Twining, Analysis of Evidence.
+
+Built by Chris Dillinger, freelance low-level C, RISC-V, and OS kernel systems
+programmer. Contact via the portfolio site: https://dillingerstaffing.github.io/portfolio/
