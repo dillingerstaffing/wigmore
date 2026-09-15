@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260915-1447">
+<meta name="build-version" content="v20260915-1453">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -123,6 +123,12 @@ select.inline{width:auto;padding:8px 10px;font-size:12px}
 .zoom-ctl button{width:34px;height:34px;background:var(--panel);border:1px solid var(--line);color:var(--ink);
   border-radius:var(--r);font-size:15px;line-height:1}
 .zoom-ctl button:hover{border-color:var(--acid);color:var(--acid)}
+.canvas-box svg{touch-action:pan-y}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);background:var(--panel);
+  border:1px solid var(--line);border-left:2px solid var(--acid);color:var(--ink);font-size:12px;letter-spacing:.02em;
+  padding:10px 16px;border-radius:var(--r);z-index:200;opacity:0;pointer-events:none;
+  transition:opacity .25s ease,transform .25s ease;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .side{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0;max-height:62vh}
 .side-tabs{display:flex;border-bottom:1px solid var(--line);flex:none}
 .side-tabs button{flex:1;background:none;border:0;color:var(--dim);font-size:10px;letter-spacing:.18em;text-transform:uppercase;padding:13px 6px}
@@ -212,7 +218,7 @@ footer{border-top:1px solid var(--line);margin-top:auto}
   nav.tabs button{padding:20px 10px}
 }
 
-/* ---------- mobile: fullscreen canvas, bottom sheet ---------- */
+/* ---------- mobile ---------- */
 .hint-mob{display:none}
 /* embedded canvas: gesture contract + callout */
 .canvas-hint{position:absolute;left:12px;top:10px;z-index:5;font-size:10px;letter-spacing:.06em;color:var(--dim);
@@ -236,9 +242,14 @@ footer{border-top:1px solid var(--line);margin-top:auto}
   .chart-bar{gap:8px}
   .chart-bar .sp{display:none}
   .chart-bar select.inline{flex:1 1 100%;min-width:0}
+  input[type=text],input[type=url],textarea,select{font-size:16px}
+  .panel{padding:16px}
   .stats div{padding:8px 2px}
   .stats b{font-size:16px}
   .stats span{font-size:8px;letter-spacing:.1em;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .btn.sm{min-height:44px;padding:10px 14px;font-size:11px}
+  .zoom-ctl button{width:44px;height:44px}
+  .icon-btn{padding:10px 12px}
 }
 </style>
 </head>
@@ -1034,8 +1045,18 @@ function showCallout(n,d){
   c.hidden=false;
 }
 function hideCallout(){ const c=document.getElementById("callout"); if(c) c.hidden=true; }
-document.getElementById("btn-fit").onclick=()=>fitView(true);
-document.getElementById("btn-frame").onclick=()=>frameSelection();
+let toastT=null;
+function toast(msg){
+  let el=document.getElementById("toast");
+  if(!el){ el=document.createElement("div"); el.className="toast"; el.id="toast"; document.body.appendChild(el); }
+  el.textContent=msg; el.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2200);
+}
+document.getElementById("btn-fit").onclick=()=>{ fitView(true); toast("Whole chart in view"); };
+document.getElementById("btn-frame").onclick=()=>{
+  if(!S.selNode){ toast("Tap a shape first, then Frame"); return; }
+  frameSelection();
+};
 document.getElementById("co-x").onclick=(e)=>{ e.stopPropagation(); hideCallout(); };
 document.getElementById("co-key").onclick=()=>{
   S.sideTab="keylist"; renderSide();
@@ -1052,7 +1073,7 @@ document.getElementById("btn-edit").onclick=()=>{
   const zc=()=>[(svg.clientWidth||800)/2,(svg.clientHeight||520)/2];
   document.getElementById("z-in").onclick=()=>{const p=zc();zoomAt(1.25,p[0],p[1]);};
   document.getElementById("z-out").onclick=()=>{const p=zc();zoomAt(0.8,p[0],p[1]);};
-  document.getElementById("z-fit").onclick=()=>fitView(true);
+  document.getElementById("z-fit").onclick=()=>{ fitView(true); toast("Whole chart in view"); };
 })();
 document.getElementById("btn-share").onclick=()=>{
   shareURL(currentData(),url=>{
@@ -1189,7 +1210,8 @@ document.getElementById("btn-share").onclick=()=>{
             mx:cx-r.left,my:cy-r.top,cx:cx,cy:cy,x:S.pan.x,y:S.pan.y,k:S.pan.k};
       drag=null; one=null; suppressClick=true;
     }
-  },{passive:true});
+    if(tpts.size>=2) e.preventDefault();
+  },{passive:false});
   svg.addEventListener("touchmove",(e)=>{
     if(!tpts.size) return;
     const ch=e.changedTouches;
