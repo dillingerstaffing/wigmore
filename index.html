@@ -588,7 +588,7 @@ function shapePath(n, x, y){
   }
   if(n.shape==="triangle"){
     const w=64,h=52;
-    return {d:"M "+(x+w/2)+" "+y+" L "+(x-w/2)+" "+(y-h/2)+" L "+(x-w/2)+" "+(y+h/2)+" Z", R:32};
+    return {d:"M "+(x-w/2)+" "+y+" L "+(x+w/2)+" "+(y-h/2)+" L "+(x+w/2)+" "+(y+h/2)+" Z", R:32};
   }
   const w=30,h=44;
   return {d:"M "+(x-w/2)+" "+(y-h/2)+" L "+(x-w/2)+" "+(y+h/2)+" L "+(x+w/2)+" "+(y+h/2)+" A "+(h/2)+" "+(h/2)+" 0 0 0 "+(x+w/2)+" "+(y-h/2)+" Z", R:26};
@@ -599,11 +599,11 @@ function renderChart(svg, d, opts){
   const W=svg.clientWidth||800, H=svg.clientHeight||520;
   const g=el("g",{},svg);
   const defs=el("defs",{},svg);
-  const mk=(id)=>{
+  const mk=(id,fill)=>{
     const m=el("marker",{id:id,viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:7,markerHeight:7,orient:"auto-start-reverse"},defs);
-    el("path",{d:"M 0 1 L 9 5 L 0 9 z",fill:"context-stroke"},m);
+    el("path",{d:"M 0 1 L 9 5 L 0 9 z",fill:fill},m);
   };
-  mk("arr"); mk("arrS");
+  mk("arr","#a8afa5"); mk("arrS","#f0f2eb");
   layout(d);
   const byId={}; d.nodes.forEach(n=>byId[n.id]=n);
   // edges under nodes
@@ -722,10 +722,9 @@ function renderLibrary(){
   if(lc&&lc.id!=="example"){
     slot.innerHTML="";
     const d=document.createElement("div"); d.className="continue";
-    d.innerHTML='<span class="micro">Continue where you left off</span><span class="t">\u2014</span>';
-    d.querySelector(".t").innerHTML=""; 
-    const t=document.createElement("span"); t.className="t";
-    t.innerHTML=""; t.appendChild(document.createTextNode(lc.name));
+    const lab=document.createElement("span"); lab.className="micro"; lab.textContent="Continue where you left off";
+    const t=document.createElement("span"); t.className="t"; t.textContent=lc.name;
+    d.appendChild(lab);
     const b=document.createElement("button"); b.className="btn sm primary"; b.textContent="Continue";
     b.onclick=()=>go("chart",lc.id);
     d.appendChild(t); d.appendChild(b); slot.appendChild(d);
@@ -958,10 +957,13 @@ document.getElementById("btn-share").onclick=()=>{
 (function(){
   let drag=null, pinch=0;
   const pos=(e)=>{ const r=svg.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
-  svg.addEventListener("pointerdown",e=>{ svg.setPointerCapture(e.pointerId); drag={p:pos(e),x:S.pan.x,y:S.pan.y}; });
+  svg.addEventListener("pointerdown",e=>{ drag={p:pos(e),x:S.pan.x,y:S.pan.y,moved:false,id:e.pointerId}; });
   svg.addEventListener("pointermove",e=>{
-    if(!drag) return;
-    const p=pos(e); S.pan.x=drag.x+(p[0]-drag.p[0]); S.pan.y=drag.y+(p[1]-drag.p[1]); applyPan();
+    if(!drag||e.pointerId!==drag.id) return;
+    const p=pos(e);
+    if(!drag.moved && Math.hypot(p[0]-drag.p[0],p[1]-drag.p[1])<6) return;
+    if(!drag.moved){ drag.moved=true; try{svg.setPointerCapture(e.pointerId);}catch(_){} }
+    S.pan.x=drag.x+(p[0]-drag.p[0]); S.pan.y=drag.y+(p[1]-drag.p[1]); applyPan();
   });
   const up=()=>{drag=null;};
   svg.addEventListener("pointerup",up); svg.addEventListener("pointercancel",up);
