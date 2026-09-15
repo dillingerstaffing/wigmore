@@ -3,9 +3,11 @@
 # Usage: ./deploy.sh "commit message"
 set -e
 cd "$(dirname "$0")"
-node --check <(python3 -c "
+python3 -c "
 s=open('index.html').read()
-print(s.split('<script>',1)[1].rsplit('</script>',1)[0])") > /dev/null && echo "js ok"
+print(s.split('<script>',1)[1].rsplit('</script>',1)[0])" > /tmp/wigmore-jscheck.js
+node --check /tmp/wigmore-jscheck.js || { echo "JS SYNTAX CHECK FAILED, deploy blocked" >&2; exit 1; }
+echo "js ok"
 touch .nojekyll
 git add -A
 git -c user.name="dillingerstaffing" -c user.email="dillingerstaffing@users.noreply.github.com" \

@@ -1128,6 +1128,7 @@ document.getElementById("btn-share").onclick=()=>{
     else if(e.key==="Escape"){S.selNode=S.selLink=null;drawChart();renderSide();}
   });
   window.addEventListener("resize",()=>{ if(S.view==="chart") drawChart(); });
+})();
 
 /* ---------- build view ---------- */
 function openBuild(id){
