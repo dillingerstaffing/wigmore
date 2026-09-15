@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260915-1439">
+<meta name="build-version" content="v20260915-1443">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -141,7 +141,7 @@ select.inline{width:auto;padding:8px 10px;font-size:12px}
 .shape-tag{display:inline-block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--acid);
   border:1px solid var(--line);padding:4px 10px;border-radius:2px}
 .stats{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:14px;background:var(--panel)}
-.stats div{flex:1;padding:10px 12px;border-right:1px solid var(--line-soft);text-align:center}
+.stats div{flex:1;min-width:0;padding:10px 12px;border-right:1px solid var(--line-soft);text-align:center}
 .stats div:last-child{border-right:0}
 .stats b{display:block;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
 .stats span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
@@ -215,10 +215,11 @@ footer{border-top:1px solid var(--line);margin-top:auto}
 /* ---------- mobile: fullscreen canvas, bottom sheet ---------- */
 .hint-mob{display:none}
 /* embedded canvas: gesture contract + callout */
-.mode-ctl{position:absolute;left:12px;bottom:12px;z-index:5;display:flex;background:rgba(12,15,13,.85);
-  border:1px solid var(--line-soft);border-radius:8px;overflow:hidden}
+.mode-ctl{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;z-index:5;display:flex;
+  background:rgba(12,15,13,.94);border:1px solid var(--acc);border-radius:12px;overflow:hidden;
+  box-shadow:0 6px 24px rgba(0,0,0,.55)}
 .mode-ctl button{border:0;background:transparent;color:var(--muted);font-family:var(--mono);
-  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:10px 13px;cursor:pointer}
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:14px 22px;cursor:pointer;min-height:48px}
 .mode-ctl button.on{background:var(--acc);color:#0c0f0d}
 .canvas-hint{position:absolute;left:12px;top:10px;z-index:5;font-size:10px;letter-spacing:.06em;color:var(--dim);
   background:rgba(12,15,13,.8);border:1px solid var(--line-soft);border-radius:2px;padding:6px 10px;
@@ -238,7 +239,11 @@ footer{border-top:1px solid var(--line);margin-top:auto}
   #v-chart .hint-mob{display:block;margin-top:8px}
   .canvas-hint{display:block}
   .chart-bar{gap:8px}
-  .chart-bar select.inline{flex:1;min-width:0}
+  .chart-bar .sp{display:none}
+  .chart-bar select.inline{flex:1 1 100%;min-width:0}
+  .stats div{padding:8px 2px}
+  .stats b{font-size:16px}
+  .stats span{font-size:8px;letter-spacing:.1em;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
 </style>
 </head>
@@ -820,6 +825,8 @@ document.getElementById("lib-new").onclick=()=>{
 
 /* ---------- chart view ---------- */
 const svg=document.getElementById("svg"), canvasBox=document.getElementById("canvas");
+var canvasExplore=true;
+var USE_TOUCH=("ontouchstart" in window)||navigator.maxTouchPoints>0;
 let chartGeom=null;
 function openChart(id){
   const fromShared=!!S.shared;
@@ -1059,6 +1066,7 @@ document.getElementById("btn-edit").onclick=()=>{
   var HINT_E="Drag to pan &middot; pinch to zoom &middot; tap a shape";
   var HINT_S="Drag up/down to scroll the page &middot; Explore mode works the chart";
   function setMode(explore){
+    canvasExplore=explore;
     box.style.touchAction=explore?"none":"pan-y";
     bE.classList.toggle("on",explore); bS.classList.toggle("on",!explore);
     if(hint) hint.innerHTML=explore?HINT_E:HINT_S;
@@ -1081,6 +1089,7 @@ document.getElementById("btn-share").onclick=()=>{
   const pdist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
   svg.addEventListener("pointerdown",e=>{
+    if(USE_TOUCH&&e.pointerType==="touch") return;
     pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pts.size===1){
       drag={p:pos(e),x:S.pan.x,y:S.pan.y,moved:false,id:e.pointerId};
@@ -1094,6 +1103,7 @@ document.getElementById("btn-share").onclick=()=>{
     }
   });
   svg.addEventListener("pointermove",e=>{
+    if(USE_TOUCH&&e.pointerType==="touch") return;
     if(!pts.has(e.pointerId)) return;
     pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pinch&&pts.size>=2){
@@ -1141,8 +1151,9 @@ document.getElementById("btn-share").onclick=()=>{
       drag={p:[rp[1].x-r.left,rp[1].y-r.top],x:S.pan.x,y:S.pan.y,moved:true,id:rp[0]};
     }
   };
-  svg.addEventListener("pointerup",endPt);
+  svg.addEventListener("pointerup",(e)=>{ if(USE_TOUCH&&e.pointerType==="touch") return; endPt(e); });
   svg.addEventListener("pointercancel",(e)=>{
+    if(USE_TOUCH&&e.pointerType==="touch") return;
     pts.delete(e.pointerId);
     if(pts.size<2) pinch=null;
     if(drag&&e.pointerId===drag.id) drag=null;
@@ -1159,6 +1170,91 @@ document.getElementById("btn-share").onclick=()=>{
     else if(e.key==="Escape"){S.selNode=S.selLink=null;drawChart();renderSide();}
   });
   window.addEventListener("resize",()=>{ if(S.view==="chart") drawChart(); });
+})();
+/* Touch gesture engine: Touch Events are more reliable than Pointer Events for
+   one-finger pan on iOS Safari. Owns touch input when USE_TOUCH; mouse/pen keep
+   the pointer engine above. In Scroll mode touches are left to the browser. */
+(function(){
+  if(!USE_TOUCH) return;
+  const tpts=new Map();
+  let drag=null, pinch=null, lastTap={t:0,x:0,y:0};
+  const r0=()=>svg.getBoundingClientRect();
+  const tp=(t)=>{ const r=r0(); return [t.clientX-r.left,t.clientY-r.top]; };
+  const pd=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  svg.addEventListener("touchstart",(e)=>{
+    if(!canvasExplore) return;
+    const ch=e.changedTouches;
+    for(let i=0;i<ch.length;i++) tpts.set(ch[i].identifier,{x:ch[i].clientX,y:ch[i].clientY});
+    if(tpts.size===1){
+      const t=e.touches[0];
+      drag={p:tp(t),x:S.pan.x,y:S.pan.y,moved:false,id:t.identifier};
+    }else if(tpts.size===2){
+      const a=[...tpts.values()], r=r0();
+      pinch={d:pd(a[0],a[1]),mx:(a[0].x+a[1].x)/2-r.left,my:(a[0].y+a[1].y)/2-r.top,
+             x:S.pan.x,y:S.pan.y,k:S.pan.k};
+      drag=null; suppressClick=true;
+    }
+  },{passive:true});
+  svg.addEventListener("touchmove",(e)=>{
+    if(!tpts.size||!canvasExplore) return;
+    e.preventDefault();
+    const ch=e.changedTouches;
+    for(let i=0;i<ch.length;i++) tpts.set(ch[i].identifier,{x:ch[i].clientX,y:ch[i].clientY});
+    if(pinch&&tpts.size>=2){
+      const a=[...tpts.values()].slice(0,2), r=r0();
+      const mx=(a[0].x+a[1].x)/2-r.left, my=(a[0].y+a[1].y)/2-r.top, d=pd(a[0],a[1]);
+      if(pinch.d>4&&d>4){
+        const k2=Math.min(4,Math.max(.25,pinch.k*d/pinch.d)), sc=k2/pinch.k;
+        S.pan.k=k2; S.pan.x=mx-(pinch.mx-pinch.x)*sc; S.pan.y=my-(pinch.my-pinch.y)*sc; applyPan();
+      }
+      return;
+    }
+    if(drag){
+      let t=null;
+      for(let i=0;i<e.touches.length;i++) if(e.touches[i].identifier===drag.id) t=e.touches[i];
+      if(!t) return;
+      const p=tp(t);
+      if(!drag.moved&&Math.hypot(p[0]-drag.p[0],p[1]-drag.p[1])<6) return;
+      drag.moved=true;
+      S.pan.x=drag.x+(p[0]-drag.p[0]); S.pan.y=drag.y+(p[1]-drag.p[1]); applyPan();
+    }
+  },{passive:false});
+  const tend=(e)=>{
+    const ch=e.changedTouches;
+    let was=null;
+    for(let i=0;i<ch.length;i++){
+      const id=ch[i].identifier;
+      if(drag&&id===drag.id) was=drag;
+      tpts.delete(id);
+    }
+    if(tpts.size<2) pinch=null;
+    if(was){
+      if(was.moved){ suppressClick=true; }
+      else{
+        const now=Date.now(), t=ch[0], p=tp(t);
+        if(now-lastTap.t<350&&Math.hypot(p[0]-lastTap.x,p[1]-lastTap.y)<28){
+          lastTap={t:0,x:0,y:0};
+          const elT=document.elementFromPoint(t.clientX,t.clientY);
+          const gn=elT&&elT.closest?elT.closest(".node"):null;
+          const nid=gn&&gn.dataset?gn.dataset.nid:null;
+          const d=currentData(), n=nid&&d.nodes.find(x=>x.id===nid);
+          if(n) zoomToNode(n); else zoomAt(1.5,p[0],p[1]);
+        }else lastTap={t:now,x:p[0],y:p[1]};
+      }
+      drag=null;
+    }
+    if(tpts.size===1&&!pinch){
+      const en=[...tpts.entries()][0], r=r0();
+      drag={p:[en[1].x-r.left,en[1].y-r.top],x:S.pan.x,y:S.pan.y,moved:true,id:en[0]};
+    }
+  };
+  svg.addEventListener("touchend",tend);
+  svg.addEventListener("touchcancel",(e)=>{
+    const ch=e.changedTouches;
+    for(let i=0;i<ch.length;i++) tpts.delete(ch[i].identifier);
+    if(tpts.size<2) pinch=null;
+    drag=null; suppressClick=true;
+  });
 })();
 
 /* ---------- build view ---------- */
