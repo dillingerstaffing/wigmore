@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260915-1453">
+<meta name="build-version" content="v20260915-1502">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -647,7 +647,7 @@ function shapePath(n, x, y){
 function renderChart(svg, d, opts){
   opts=opts||{};
   while(svg.firstChild) svg.removeChild(svg.firstChild);
-  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const [W,H]=svgSize();
   const g=el("g",{},svg);
   const defs=el("defs",{},svg);
   const mk=(id,fill)=>{
@@ -830,6 +830,10 @@ document.getElementById("lib-new").onclick=()=>{
 
 /* ---------- chart view ---------- */
 const svg=document.getElementById("svg"), canvasBox=document.getElementById("canvas");
+function svgSize(){
+  const r=svg.getBoundingClientRect();
+  return [r.width||800, r.height||520];
+}
 var USE_TOUCH=("ontouchstart" in window)||navigator.maxTouchPoints>0;
 let chartGeom=null;
 function openChart(id){
@@ -847,7 +851,7 @@ function openChart(id){
   }
   renderShareSlot(); drawChart(); fitView(); renderSide(); renderStats(); hideCallout();
   if(!fromShared) localStorage.setItem(LS_LAST,id);
-  fitView(false);
+  if(window.requestAnimationFrame) requestAnimationFrame(()=>{ if(S.view==="chart") fitView(false); });
 }
 document.getElementById("chart-switch").addEventListener("change",e=>{
   const v=e.target.value;
@@ -994,7 +998,7 @@ function fitNodes(ns){
   const xs=ns.map(n=>n._x), ys=ns.map(n=>n._y);
   const x0=Math.min.apply(null,xs)-90, x1=Math.max.apply(null,xs)+90;
   const y0=Math.min.apply(null,ys)-80, y1=Math.max.apply(null,ys)+90;
-  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const [W,H]=svgSize();
   const k=Math.min(W/(x1-x0), H/(y1-y0), 1.6);
   S.pan.k=k; S.pan.x=W/2-(x0+x1)/2*k; S.pan.y=H/2-(y0+y1)/2*k;
   applyPan();
@@ -1010,7 +1014,7 @@ function frameSelection(){
   fitNodes(d.nodes.filter(n=>seen[n.id]));
 }
 function panToNode(n){
-  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const [W,H]=svgSize();
   const k=Math.min(4,Math.max(S.pan.k,1.15));
   S.pan.k=k; S.pan.x=W/2-n._x*k; S.pan.y=H*0.40-n._y*k;
   applyPan();
@@ -1022,7 +1026,7 @@ function zoomAt(f,cx,cy){
   applyPan();
 }
 function zoomToNode(n){
-  const W=svg.clientWidth||800, H=svg.clientHeight||520;
+  const [W,H]=svgSize();
   const k2=Math.min(4,Math.max(S.pan.k*1.5,1.5));
   S.pan.k=k2; S.pan.x=W/2-n._x*k2; S.pan.y=H*0.40-n._y*k2;
   applyPan();
@@ -1070,7 +1074,7 @@ document.getElementById("btn-edit").onclick=()=>{
   go("build",S.chartId);
 };
 (function(){
-  const zc=()=>[(svg.clientWidth||800)/2,(svg.clientHeight||520)/2];
+  const zc=()=>{const s=svgSize();return [s[0]/2,s[1]/2];};
   document.getElementById("z-in").onclick=()=>{const p=zc();zoomAt(1.25,p[0],p[1]);};
   document.getElementById("z-out").onclick=()=>{const p=zc();zoomAt(0.8,p[0],p[1]);};
   document.getElementById("z-fit").onclick=()=>{ fitView(true); toast("Whole chart in view"); };
@@ -1165,8 +1169,8 @@ document.getElementById("btn-share").onclick=()=>{
     if(S.view!=="chart") return;
     const t=e.target;
     if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.tagName==="SELECT")) return;
-    if(e.key==="+"||e.key==="="){zoomAt(1.2,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);e.preventDefault();}
-    else if(e.key==="-"||e.key==="_"){zoomAt(.84,(svg.clientWidth||800)/2,(svg.clientHeight||520)/2);e.preventDefault();}
+    if(e.key==="+"||e.key==="="){const s=svgSize();zoomAt(1.2,s[0]/2,s[1]/2);e.preventDefault();}
+    else if(e.key==="-"||e.key==="_"){const s=svgSize();zoomAt(.84,s[0]/2,s[1]/2);e.preventDefault();}
     else if(e.key==="0"){fitView(true);}
     else if(e.key==="Escape"){S.selNode=S.selLink=null;drawChart();renderSide();}
   });
