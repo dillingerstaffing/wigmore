@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260916-0514">
+<meta name="build-version" content="v20260916-0533">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -612,36 +612,63 @@ function layout(d){
   d.nodes.forEach(n=>{ if(rank[n.id]===undefined) r(n,{}); });
   const layers={};
   d.nodes.forEach(n=>{ const k=rank[n.id]; (layers[k]=layers[k]||[]).push(n); });
-  Object.keys(layers).forEach(k=>{
-    const arr=layers[k];
-    const main=arr.filter(n=>n.shape!=="triangle"), tri=arr.filter(n=>n.shape==="triangle");
-    main.forEach(n=>{
-      let s=0,c=0;
-      d.links.forEach(l=>{ if(l.from===n.id&&byId[l.to]&&byId[l.to]._x!==undefined){s+=byId[l.to]._x;c++;} });
-      n._b=c?s/c:-1;
-    });
-    main.sort((a,b)=>(a._b<0?999:a._b)-(b._b<0?999:b._b));
-    tri.sort((a,b)=>{
-      const la=d.links.find(x=>x.from===a.id), lb=d.links.find(x=>x.from===b.id);
-      const ia=la?main.indexOf(byId[la.to]):-1, ib=lb?main.indexOf(byId[lb.to]):-1;
-      return ia-ib;
-    });
-    layers[k]=main.concat(tri);
-  });
   const XG=190, YG=150;
+  /* D-shape generalizations with a single inference link pin directly below
+     the node they generalize (the Wigmorean vertical: generalization under
+     evidence under conclusion) instead of taking a pitch slot. */
+  const pinTarget={};
+  d.nodes.forEach(n=>{
+    if(n.shape==="d"){
+      const outs=d.links.filter(l=>l.from===n.id);
+      if(outs.length===1&&outs[0].type==="inference"){
+        const t=byId[outs[0].to];
+        if(t&&rank[t.id]===rank[n.id]-1) pinTarget[n.id]=t.id;
+      }
+    }
+  });
+  const isPinned=n=>!!pinTarget[n.id];
+  /* Main-shape ordering runs as fixed sweeps (place -> barycenter-sort ->
+     place -> barycenter-sort -> place), a pure function of the data. The
+     old code read _x left over from the previous render when computing
+     barycenters, so every re-render re-sorted the rows and nodes drifted
+     around the chart the more it was used. */
+  function placeMains(){
+    Object.keys(layers).forEach(k=>{
+      const arr=layers[k].filter(n=>n.shape!=="triangle"&&!isPinned(n));
+      let x=0;
+      arr.forEach(n=>{ n._x=x; n._y=rank[n.id]*YG+70; x+=XG; });
+      if(arr.length){
+        const xs=arr.map(n=>n._x), cx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2;
+        arr.forEach(n=>{ n._x-=cx; });
+      }
+    });
+    placePinned();
+  }
+  function placePinned(){
+    d.nodes.forEach(n=>{
+      if(isPinned(n)){ const t=byId[pinTarget[n.id]]; n._x=t._x; n._y=rank[n.id]*YG+70; }
+    });
+  }
+  function barycenterSort(){
+    Object.keys(layers).forEach(k=>{
+      const mains=layers[k].filter(n=>n.shape!=="triangle"&&!isPinned(n));
+      mains.forEach(n=>{
+        let s=0,c=0;
+        d.links.forEach(l=>{
+          if(l.from===n.id&&byId[l.to]&&byId[l.to]._x!==undefined){ s+=byId[l.to]._x; c++; }
+        });
+        n._b=c?s/c:1e9;
+      });
+      mains.sort((a,b)=>a._b-b._b);
+      const rest=layers[k].filter(n=>mains.indexOf(n)<0);
+      layers[k]=mains.concat(rest);
+    });
+  }
+  placeMains(); barycenterSort(); placeMains(); barycenterSort(); placeMains();
   /* Pass 1: position and center the main shapes. Triangles are placed in
      pass 2, AFTER every layer is centered, so they always read their
      target's final coordinates. (Placing them before centering used to
      land them on top of neighboring shapes.) */
-  Object.keys(layers).forEach(k=>{
-    const arr=layers[k].filter(n=>n.shape!=="triangle");
-    let x=0;
-    arr.forEach(n=>{ n._x=x; n._y=rank[n.id]*YG+70; x+=XG; });
-    if(arr.length){
-      const xs=arr.map(n=>n._x), cx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2;
-      arr.forEach(n=>{ n._x-=cx; });
-    }
-  });
   /* Pass 2: explanation triangles hang below-right of their target, in the
      lane between ranks, so they read as annotations instead of marching
      through the row. 70px right / 95px down clears the target (118px),
@@ -678,15 +705,16 @@ function layout(d){
   /* Pass 3, the guarantee: after layout, no two shapes on ANY chart may
      overlap. Mains keep their rank rows (x only); triangles move freely.
      Deterministic; converges in a pass or two on sane layouts. */
-  separateOverlaps(d);
+  separateOverlaps(d, pinTarget);
   let maxR=0; Object.keys(layers).forEach(k=>maxR=Math.max(maxR,+k));
   return {rank:rank, maxRank:maxR};
 }
 /* Push overlapping shapes apart until none overlap. Safety net for every
    chart: layout() always ends with this, so a crowded user-built chart can
    never render shapes on top of each other the way the old triangle code did. */
-function separateOverlaps(d){
+function separateOverlaps(d, pinTarget){
   const rad=n=>n.shape==="triangle"?36:32, pad=10;
+  const pinned=n=>pinTarget&&!!pinTarget[n.id];
   for(let iter=0; iter<60; iter++){
     let moved=false;
     for(let i=0;i<d.nodes.length;i++) for(let j=i+1;j<d.nodes.length;j++){
@@ -695,9 +723,14 @@ function separateOverlaps(d){
       const minD=rad(a)+rad(b)+pad;
       if(dist>=minD) continue;
       if(dist<1){ dx=1; dy=0; dist=1; }
+      /* A pinned generalization holds its ground: the unpinned node takes
+         the full push, so the D stays exactly below the node it
+         generalizes. Two pinned nodes split the push as usual. */
+      let pa=1, pb=1;
+      if(pinned(a)&&!pinned(b)){ pa=0; pb=2; } else if(pinned(b)&&!pinned(a)){ pa=2; pb=0; }
       const push=(minD-dist)/2+0.5, ux=dx/dist, uy=dy/dist;
-      if(a.shape==="triangle"){ a._x-=ux*push; a._y-=uy*push; } else { a._x-=ux*push; }
-      if(b.shape==="triangle"){ b._x+=ux*push; b._y+=uy*push; } else { b._x+=ux*push; }
+      if(a.shape==="triangle"){ a._x-=ux*push*pa; a._y-=uy*push*pa; } else { a._x-=ux*push*pa; }
+      if(b.shape==="triangle"){ b._x+=ux*push*pb; b._y+=uy*push*pb; } else { b._x+=ux*push*pb; }
       moved=true;
     }
     if(!moved) break;
