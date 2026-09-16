@@ -6,7 +6,7 @@
 <title>Wigmore</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260916-0549">
+<meta name="build-version" content="v20260916-0559">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -56,7 +56,8 @@ button{font-family:var(--mono);cursor:pointer}
 :focus-visible{outline:1px solid var(--acid);outline-offset:2px}
 
 /* ---------- header ---------- */
-header{border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:50}
+header{border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:50;
+  padding-top:env(safe-area-inset-top)} /* home-screen app: keep header content below the iPhone status bar */
 .hd-in{max-width:1240px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:16px}
 .brand{display:flex;align-items:center;gap:12px;flex:none}
 .brand img{width:30px;height:30px;display:block}
