@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260916-0510">
+<meta name="build-version" content="v20260916-0513">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -425,8 +425,8 @@ const ROLES = {
 const LINES = {
   inference:  {name:"Inference", guide:"Reasoning upward: the premises support the conclusion."},
   refutation: {name:"Refutation", guide:"A premise offered against a conclusion. Drawn as a vertical arrow marked with a circle."},
-  explanation:{name:"Explanation", guide:"An objection that explains away a conclusion or lessens its force. Horizontal, to the right of the conclusion."},
-  rebuttal:   {name:"Refutation of explanation", guide:"Refutes the explanation and corroborates the original conclusion. Horizontal, marked with a cross."}
+  explanation:{name:"Explanation", guide:"An objection that explains away a conclusion or lessens its force. Hangs below-right of the conclusion, in the lane between ranks."},
+  rebuttal:   {name:"Refutation of explanation", guide:"Refutes the explanation and corroborates the original conclusion. Chained below-right of the explanation, marked with a cross."}
 };
 
 /* ---------- store ---------- */
@@ -642,11 +642,12 @@ function layout(d){
       arr.forEach(n=>{ n._x-=cx; });
     }
   });
-  /* Pass 2: explanation triangles sit beside their target. The 95px offset
-     clears both the target and the next main shape on the 190px pitch
-     (95px of clearance each way beats the 74px no-overlap distance).
-     Triangles that share a target fan out vertically instead of stacking. */
-  const TRI_DX=95, TRI_DY=110;
+  /* Pass 2: explanation triangles hang below-right of their target, in the
+     lane between ranks, so they read as annotations instead of marching
+     through the row. 70px right / 95px down clears the target (118px),
+     the next main shape (153px), and the rank below (89px). Triangles
+     that share a target fan out rightward instead of stacking. */
+  const TRI_DX=70, TRI_DY=95, TRI_FAN=85;
   const tris=d.nodes.filter(n=>n.shape==="triangle");
   tris.forEach(n=>{
     const l=d.links.find(x2=>x2.from===n.id);
@@ -656,8 +657,10 @@ function layout(d){
   tris.forEach(n=>{ const key=n._target?n._target.id:"none"; (sibsOf[key]=sibsOf[key]||[]).push(n); });
   function placeTri(n){
     const t=n._target, sibs=sibsOf[t?t.id:"none"], idx=sibs.indexOf(n);
-    n._x=(t&&t._x!==undefined?t._x:0)+TRI_DX;
-    n._y=rank[n.id]*YG+70+(idx-(sibs.length-1)/2)*TRI_DY;
+    const bx=(t&&t._x!==undefined)?t._x:0;
+    const by=(t&&t._y!==undefined)?t._y:rank[n.id]*YG+70;
+    n._x=bx+TRI_DX+idx*TRI_FAN;
+    n._y=by+TRI_DY;
   }
   let pending=tris.slice(), guard=0;
   while(pending.length&&guard++<12){
@@ -798,8 +801,9 @@ function topDouble(n,x,y){
 }
 function edgePath(a,b,l){
   if(l.type==="explanation"||l.type==="rebuttal"){
-    const x1=b._x+34, y1=b._y, x2=a._x-36, y2=a._y;
-    if(Math.abs(y1-y2)<4) return "M "+x1+" "+y1+" L "+(x2-2)+" "+y1;
+    const dx=a._x-b._x, dy=a._y-b._y, len=Math.hypot(dx,dy)||1;
+    const x1=b._x+dx/len*34, y1=b._y+dy/len*34;
+    const x2=a._x-dx/len*40, y2=a._y-dy/len*40;
     return "M "+x1+" "+y1+" L "+x2+" "+y2;
   }
   const x1=a._x, y1=a._y-34, x2=b._x, y2=b._y+36;
