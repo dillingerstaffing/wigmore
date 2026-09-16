@@ -6,7 +6,17 @@
 <title>Wigmore</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260916-0559">
+<script data-theme-init>
+/* Theme: notebook is the default; a stored visitor choice wins. Runs before
+   the stylesheet is parsed so the first paint is already the right theme
+   (no flash of the wrong one). The data- attribute keeps this block out of
+   the deploy script's plain-script gate, which expects the main script first. */
+try{
+  var __t=localStorage.getItem('emi-site-theme');
+  document.documentElement.dataset.theme=(__t==='classic')?'classic':'notebook';
+}catch(_){ document.documentElement.dataset.theme='notebook'; }
+</script>
+<meta name="build-version" content="v20260916-2350">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -60,7 +70,10 @@ header{border-bottom:1px solid var(--line);background:var(--bg);position:sticky;
   padding-top:env(safe-area-inset-top)} /* home-screen app: keep header content below the iPhone status bar */
 .hd-in{max-width:1240px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:16px}
 .brand{display:flex;align-items:center;gap:12px;flex:none}
-.brand img{width:30px;height:30px;display:block}
+.brand-logo{width:30px;height:30px;display:block}
+.lg-ring{stroke:var(--acid)}
+.lg-num{fill:var(--ink)}
+.lg-arr{stroke:var(--muted)}
 .wordmark{font-weight:600;font-size:15px;letter-spacing:.22em}
 .wordmark small{display:block;font-size:9px;letter-spacing:.28em;color:var(--dim);font-weight:400}
 nav.tabs{margin-left:auto;display:flex;gap:2px;overflow-x:auto}
@@ -252,7 +265,7 @@ footer{border-top:1px solid var(--line);margin-top:auto}
   /* compact header: brand + 4 tabs must fit 360px with zero sideways panning */
   .hd-in{padding:0 12px;gap:8px}
   .brand{gap:8px}
-  .brand img{width:24px;height:24px}
+  .brand-logo{width:24px;height:24px}
   .wordmark{font-size:12px;letter-spacing:.14em}
   .wordmark small{display:none}
   nav.tabs{flex:1;min-width:0}
@@ -271,13 +284,135 @@ footer{border-top:1px solid var(--line);margin-top:auto}
   .zoom-ctl button{width:44px;height:44px}
   .icon-btn{padding:10px 12px}
 }
+
+/* ================= Theme system: notebook (default) and classic =================
+   :root carries the classic theme (the current dark terminal design), untouched.
+   Everything below re-voices the same markup in the notebook design language:
+   flat warm paper, committed dark ink, one sanguine accent reserved for
+   affordances and annotations, serif article typography, hairline rules, no
+   glow, no gradients, no texture, none of the notebook cliches. Tonal
+   transitions keep the switch smooth; the wipe reveal is driven by the
+   view-transition API from the toggle's position. */
+[data-theme="notebook"]{
+  --bg:#ece6d5; --panel:#e3dac2; --panel2:#d9cfae; --line:#c9bfa4; --line-soft:#d8cdae;
+  --ink:#241f17; --muted:#5e5648; --dim:#8d8474; --acid:#8c3f22; --acid-soft:#a5542f;
+  --paper:#f4efe0; --warn:#96690f; --bad:#a83c28;
+}
+html[data-theme="notebook"]{background:#ece6d5}
+[data-theme="notebook"] body{background:var(--bg);color:var(--ink);font-family:"Newsreader",Georgia,serif}
+[data-theme="notebook"] ::selection{background:var(--acid);color:var(--paper)}
+
+/* Tonal timing on theme switches (both themes). Elements that own their own
+   transitions (the toast) are untouched. */
+body,header,.btn,.card,.panel,.key-card,.callout,input,select,textarea,.theme-toggle,
+.side-tabs button,.zoom-ctl button,.shape-opt,.icon-btn,nav.tabs button,.share-banner,
+.stats,.continue,.badge,.canvas-hint{
+  transition:background-color .45s ease,color .45s ease,border-color .45s ease;
+}
+
+/* Buttons: ink plates on paper; sanguine on hover. Primary is the sanguine plate. */
+[data-theme="notebook"] .btn{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+[data-theme="notebook"] .btn:hover,[data-theme="notebook"] .btn:focus-visible{
+  background:var(--acid);border-color:var(--acid);color:#fdfaf1}
+[data-theme="notebook"] .btn.primary{background:var(--acid);border-color:var(--acid);color:#fdfaf1}
+[data-theme="notebook"] .btn.primary:hover,[data-theme="notebook"] .btn.primary:focus-visible{
+  background:var(--acid-soft);border-color:var(--acid-soft)}
+[data-theme="notebook"] .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+[data-theme="notebook"] .btn.ghost:hover,[data-theme="notebook"] .btn.ghost:focus-visible{
+  border-color:var(--acid);color:var(--acid)}
+
+/* Form controls: writable sheets of lighter paper, sanguine focus. */
+[data-theme="notebook"] input[type=text],[data-theme="notebook"] input[type=url],
+[data-theme="notebook"] textarea,[data-theme="notebook"] select{
+  background:var(--paper);border-color:var(--line);color:var(--ink)}
+[data-theme="notebook"] input:focus,[data-theme="notebook"] textarea:focus,
+[data-theme="notebook"] select:focus{border-color:var(--acid)}
+[data-theme="notebook"] .checks input{accent-color:var(--acid)}
+
+/* Library: paper cards, hairline frames, the stamp becomes ink. */
+[data-theme="notebook"] .card{background:var(--paper);border-color:var(--line)}
+[data-theme="notebook"] .card:hover{border-color:var(--ink)}
+[data-theme="notebook"] .badge{border-color:var(--line);color:var(--muted)}
+[data-theme="notebook"] .badge.acid{border-color:var(--acid);color:var(--acid)}
+[data-theme="notebook"] .continue{background:var(--paper);border-color:var(--line);border-left-color:var(--acid)}
+
+/* Chart: paper canvas, ink nodes, sanguine for the ultimate probandum. */
+[data-theme="notebook"] .chart-wrap{background:var(--panel2);border-color:var(--line)}
+[data-theme="notebook"] .grid-dot{fill:#c9bc9c}
+[data-theme="notebook"] .node:hover .halo{fill:rgba(140,63,34,.08)}
+#arr path{fill:var(--muted)}
+#arrS path{fill:var(--ink)}
+[data-theme="notebook"] .zoom-ctl button{background:var(--paper);border-color:var(--line);color:var(--ink)}
+[data-theme="notebook"] .zoom-ctl button:hover{border-color:var(--acid);color:var(--acid)}
+[data-theme="notebook"] .toast{background:var(--paper);border-color:var(--line);border-left-color:var(--acid);color:var(--ink)}
+[data-theme="notebook"] .side{background:var(--panel);border-color:var(--line)}
+[data-theme="notebook"] .side-tabs button.on{color:var(--acid);box-shadow:inset 0 -2px 0 var(--acid)}
+[data-theme="notebook"] .keylist .kn{border-color:var(--line);color:var(--acid)}
+[data-theme="notebook"] .shape-tag{color:var(--acid);border-color:var(--line)}
+[data-theme="notebook"] .stats{background:var(--panel);border-color:var(--line)}
+[data-theme="notebook"] .share-banner{background:var(--paper);border-color:var(--acid)}
+[data-theme="notebook"] .canvas-hint{background:rgba(236,230,213,.94);border-color:var(--line);color:var(--dim)}
+[data-theme="notebook"] .callout{background:var(--paper);border-color:var(--line);border-left-color:var(--acid)}
+[data-theme="notebook"] .co-tag{color:var(--acid)}
+[data-theme="notebook"] .keylist li.flash{animation:kflash-nb 1.4s ease-out}
+@keyframes kflash-nb{0%{background:rgba(140,63,34,.14)}100%{background:transparent}}
+
+/* Build: paper panels and options, the picked shape stamped in sanguine. */
+[data-theme="notebook"] .panel{background:var(--paper);border-color:var(--line)}
+[data-theme="notebook"] .shape-opt{background:var(--paper);border-color:var(--line);color:var(--ink)}
+[data-theme="notebook"] .shape-opt:hover{border-color:var(--dim)}
+[data-theme="notebook"] .shape-opt.on{border-color:var(--acid)}
+[data-theme="notebook"] .icon-btn{border-color:var(--line);color:var(--muted);background:transparent}
+[data-theme="notebook"] .icon-btn:hover{color:var(--bad);border-color:var(--bad)}
+[data-theme="notebook"] .icon-btn.ed:hover{color:var(--acid);border-color:var(--acid)}
+[data-theme="notebook"] .errs{background:#f2e3c6;border-color:var(--bad)}
+[data-theme="notebook"] .errs li{color:#8c3a24}
+[data-theme="notebook"] .ok-note{border-color:var(--line);color:var(--muted)}
+
+/* Schema key: paper cards, sanguine symbols and emphasis. */
+[data-theme="notebook"] .key-card{background:var(--paper);border-color:var(--line)}
+[data-theme="notebook"] .key-card h4 em{color:var(--acid)}
+.ksym{stroke:var(--acid)}
+
+/* Ink encodes commitment (notebook devices): committed lines stay heavy
+   near-black ink; provisional lines drop to a lighter weight; the "?" marks
+   of preliminary assessment are set in sanguine, the annotation color. */
+[data-theme="notebook"] .edge.weak{stroke:var(--dim);stroke-width:1}
+[data-theme="notebook"] .edge-lbl{fill:var(--acid)}
+[data-theme="notebook"] .mark-doubt{fill:var(--acid)}
+
+/* ---- The theme toggle: a quiet folio mark, not a nav link ---- */
+.theme-toggle{flex:0 0 auto;width:26px;height:26px;display:grid;place-items:center;padding:0;
+  background:transparent;border:1px solid var(--line);border-radius:2px;cursor:pointer}
+.theme-toggle:hover{border-color:var(--acid)}
+.theme-toggle:focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+.theme-toggle-mark{display:flex;width:12px;height:12px;transition:transform .5s cubic-bezier(.3,.7,.2,1)}
+.theme-toggle-mark i{display:block;width:6px;height:12px}
+.theme-toggle-mark i:first-child{background:#ece6d5}
+.theme-toggle-mark i:last-child{background:#241f17;border-left:1px solid #ece6d5}
+.theme-toggle.is-flipped .theme-toggle-mark{transform:rotate(180deg)}
+
+/* ---- Theme wipe: a calm radial reveal from the toggle ---- */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-new(root){z-index:2147483647;
+  clip-path:circle(0px at var(--tx,50vw) var(--ty,12px));
+  animation:theme-wipe .7s cubic-bezier(.32,.72,.24,1) forwards}
+@keyframes theme-wipe{to{clip-path:circle(150vmax at var(--tx,50vw) var(--ty,12px))}}
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-old(root),::view-transition-new(root){animation:none!important}
+  .theme-toggle-mark{transition:none}
+}
 </style>
 </head>
 <body>
 <header>
   <div class="hd-in">
     <div class="brand">
-      <img src="assets/logo.svg" alt="Wigmore logo" width="30" height="30">
+      <svg class="brand-logo" viewBox="0 0 64 64" width="30" height="30" role="img" aria-label="Wigmore logo">
+        <circle class="lg-ring" cx="32" cy="30" r="21" fill="none" stroke-width="2.5"/>
+        <text class="lg-num" x="32" y="38" text-anchor="middle" font-family="monospace" font-size="24" font-weight="600">1</text>
+        <path class="lg-arr" d="M32 58 L32 52 M28 55 L32 51 L36 55" stroke-width="2" fill="none"/>
+      </svg>
       <div class="wordmark">WIGMORE<small>EVIDENCE CHARTS</small></div>
     </div>
     <nav class="tabs" id="tabs">
@@ -286,6 +421,9 @@ footer{border-top:1px solid var(--line);margin-top:auto}
       <button data-view="build">Build</button>
       <button data-view="key">Schema</button>
     </nav>
+    <button class="theme-toggle" type="button" aria-label="Switch to dark terminal theme" title="Switch theme">
+      <span class="theme-toggle-mark" aria-hidden="true"><i></i><i></i></span>
+    </button>
   </div>
 </header>
 
@@ -780,11 +918,12 @@ function renderChart(svg, d, opts){
   const [W,H]=svgSize();
   const g=el("g",{},svg);
   const defs=el("defs",{},svg);
-  const mk=(id,fill)=>{
+  /* Arrowhead fills live in CSS (#arr path, #arrS path) so they follow the theme. */
+  const mk=(id)=>{
     const m=el("marker",{id:id,viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:7,markerHeight:7,orient:"auto-start-reverse"},defs);
-    el("path",{d:"M 0 1 L 9 5 L 0 9 z",fill:fill},m);
+    el("path",{d:"M 0 1 L 9 5 L 0 9 z"},m);
   };
-  mk("arr","#a8afa5"); mk("arrS","#f0f2eb");
+  mk("arr"); mk("arrS");
   layout(d);
   const byId={}; d.nodes.forEach(n=>byId[n.id]=n);
   // edges under nodes
@@ -827,7 +966,7 @@ function renderChart(svg, d, opts){
     let mx=x+22;
     if(n.autoptic){ const s=el("text",{x:mx,y:y+4,"font-size":13,fill:"var(--dim)"},gn); s.textContent="\u221E"; mx+=14; }
     if(n.noticed){ const s=el("text",{x:x-24,y:y-20,"font-size":13,fill:"var(--dim)"},gn); s.textContent="\u2019"; }
-    if(n.doubt){ const s=el("text",{x:x+20,y:y-18,"font-size":13,fill:"var(--warn)"},gn); s.textContent="?"; }
+    if(n.doubt){ const s=el("text",{x:x+20,y:y-18,"font-size":13,"class":"mark-doubt",fill:"var(--warn)"},gn); s.textContent="?"; }
     gn.addEventListener("click",(ev)=>{ev.stopPropagation(); opts.onNode&&opts.onNode(n);});
   });
   return {g:g, W:W, H:H};
@@ -1676,7 +1815,7 @@ function renderKey(){
   const grid=document.getElementById("key-grid"); grid.innerHTML="";
   const symSVG=(shape)=>{
     const sp=shapePath({shape:shape},0,0);
-    return '<svg width="72" height="56" viewBox="-45 -35 90 70"><path d="'+sp.d+'" fill="none" stroke="#b8f34b" stroke-width="2.5"/></svg>';
+    return '<svg width="72" height="56" viewBox="-45 -35 90 70"><path class="ksym" d="'+sp.d+'" fill="none" stroke-width="2.5"/></svg>';
   };
   const cards=[
     ["\u25CB Circle","Fact",
@@ -1748,6 +1887,44 @@ async function boot(){
   go("library");
 }
 boot();
+</script>
+<script>
+/* Theme engine: notebook is the default, a stored choice wins (the head
+   script already set data-theme before first paint). The toggle flips live;
+   with the view-transition API the new theme wipes in radially from the
+   toggle, otherwise the tonal CSS transitions carry it. */
+(function(){
+  var KEY='emi-site-theme';
+  var root=document.documentElement;
+  var meta=document.querySelector('meta[name="theme-color"]');
+  var COLORS={notebook:'#ece6d5',classic:'#0c0f0d'};
+  var btn=document.querySelector('.theme-toggle');
+  function current(){ return root.dataset.theme==='classic'?'classic':'notebook'; }
+  function otherName(t){ return t==='classic'?'notebook folio':'dark terminal'; }
+  function apply(t){
+    root.dataset.theme=t;
+    if(meta) meta.setAttribute('content',COLORS[t]);
+    if(btn) btn.setAttribute('aria-label','Switch to '+otherName(t)+' theme');
+  }
+  function toggle(){
+    var next=current()==='classic'?'notebook':'classic';
+    try{ localStorage.setItem(KEY,next); }catch(_){}
+    var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(btn){
+      var r=btn.getBoundingClientRect();
+      root.style.setProperty('--tx',Math.round(r.left+r.width/2)+'px');
+      root.style.setProperty('--ty',Math.round(r.top+r.height/2)+'px');
+      btn.classList.toggle('is-flipped',next==='classic');
+    }
+    if(!reduced&&document.startViewTransition){ document.startViewTransition(function(){apply(next);}); }
+    else{ apply(next); }
+  }
+  if(btn){
+    btn.classList.toggle('is-flipped',current()==='classic');
+    btn.addEventListener('click',toggle);
+  }
+  apply(current());
+})();
 </script>
 <script>
 /* Auto-update: reload once when a newer build is published. */
