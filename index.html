@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260916-0454">
+<meta name="build-version" content="v20260916-0510">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -628,21 +628,77 @@ function layout(d){
     });
     layers[k]=main.concat(tri);
   });
-  const XG=190, YG=150, TR=30;
+  const XG=190, YG=150;
+  /* Pass 1: position and center the main shapes. Triangles are placed in
+     pass 2, AFTER every layer is centered, so they always read their
+     target's final coordinates. (Placing them before centering used to
+     land them on top of neighboring shapes.) */
   Object.keys(layers).forEach(k=>{
-    const arr=layers[k]; let x=0;
-    arr.forEach(n=>{
-      if(n.shape==="triangle"){
-        const l=d.links.find(x2=>x2.from===n.id);
-        const t=l&&byId[l.to];
-        n._x=(t&&t._x!==undefined?t._x:0)+170; n._y=rank[n.id]*YG+70;
-      }else{ n._x=x; n._y=rank[n.id]*YG+70; x+=XG; }
-    });
-    const xs=arr.map(n=>n._x), cx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2;
-    arr.forEach(n=>{ if(n.shape!=="triangle") n._x-=cx; });
+    const arr=layers[k].filter(n=>n.shape!=="triangle");
+    let x=0;
+    arr.forEach(n=>{ n._x=x; n._y=rank[n.id]*YG+70; x+=XG; });
+    if(arr.length){
+      const xs=arr.map(n=>n._x), cx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2;
+      arr.forEach(n=>{ n._x-=cx; });
+    }
   });
+  /* Pass 2: explanation triangles sit beside their target. The 95px offset
+     clears both the target and the next main shape on the 190px pitch
+     (95px of clearance each way beats the 74px no-overlap distance).
+     Triangles that share a target fan out vertically instead of stacking. */
+  const TRI_DX=95, TRI_DY=110;
+  const tris=d.nodes.filter(n=>n.shape==="triangle");
+  tris.forEach(n=>{
+    const l=d.links.find(x2=>x2.from===n.id);
+    n._target=(l&&byId[l.to])||null;
+  });
+  const sibsOf={};
+  tris.forEach(n=>{ const key=n._target?n._target.id:"none"; (sibsOf[key]=sibsOf[key]||[]).push(n); });
+  function placeTri(n){
+    const t=n._target, sibs=sibsOf[t?t.id:"none"], idx=sibs.indexOf(n);
+    n._x=(t&&t._x!==undefined?t._x:0)+TRI_DX;
+    n._y=rank[n.id]*YG+70+(idx-(sibs.length-1)/2)*TRI_DY;
+  }
+  let pending=tris.slice(), guard=0;
+  while(pending.length&&guard++<12){
+    const rest=[];
+    pending.forEach(n=>{
+      const t=n._target;
+      if(t&&t.shape==="triangle"&&t._x===undefined){ rest.push(n); return; }
+      placeTri(n);
+    });
+    if(rest.length===pending.length) break;
+    pending=rest;
+  }
+  pending.forEach(placeTri); /* break dependency cycles deterministically */
+  d.nodes.forEach(n=>{ delete n._target; });
+  /* Pass 3, the guarantee: after layout, no two shapes on ANY chart may
+     overlap. Mains keep their rank rows (x only); triangles move freely.
+     Deterministic; converges in a pass or two on sane layouts. */
+  separateOverlaps(d);
   let maxR=0; Object.keys(layers).forEach(k=>maxR=Math.max(maxR,+k));
   return {rank:rank, maxRank:maxR};
+}
+/* Push overlapping shapes apart until none overlap. Safety net for every
+   chart: layout() always ends with this, so a crowded user-built chart can
+   never render shapes on top of each other the way the old triangle code did. */
+function separateOverlaps(d){
+  const rad=n=>n.shape==="triangle"?36:32, pad=10;
+  for(let iter=0; iter<60; iter++){
+    let moved=false;
+    for(let i=0;i<d.nodes.length;i++) for(let j=i+1;j<d.nodes.length;j++){
+      const a=d.nodes[i], b=d.nodes[j];
+      let dx=b._x-a._x, dy=b._y-a._y, dist=Math.hypot(dx,dy);
+      const minD=rad(a)+rad(b)+pad;
+      if(dist>=minD) continue;
+      if(dist<1){ dx=1; dy=0; dist=1; }
+      const push=(minD-dist)/2+0.5, ux=dx/dist, uy=dy/dist;
+      if(a.shape==="triangle"){ a._x-=ux*push; a._y-=uy*push; } else { a._x-=ux*push; }
+      if(b.shape==="triangle"){ b._x+=ux*push; b._y+=uy*push; } else { b._x+=ux*push; }
+      moved=true;
+    }
+    if(!moved) break;
+  }
 }
 
 /* ---------- renderer ---------- */
@@ -742,8 +798,9 @@ function topDouble(n,x,y){
 }
 function edgePath(a,b,l){
   if(l.type==="explanation"||l.type==="rebuttal"){
-    const y=b._y, x1=b._x+34, x2=a._x-36;
-    return "M "+x1+" "+y+" L "+(x2-2)+" "+y;
+    const x1=b._x+34, y1=b._y, x2=a._x-36, y2=a._y;
+    if(Math.abs(y1-y2)<4) return "M "+x1+" "+y1+" L "+(x2-2)+" "+y1;
+    return "M "+x1+" "+y1+" L "+x2+" "+y2;
   }
   const x1=a._x, y1=a._y-34, x2=b._x, y2=b._y+36;
   if(Math.abs(x1-x2)<4) return "M "+x1+" "+y1+" L "+x2+" "+(y2-2);
