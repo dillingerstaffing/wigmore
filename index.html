@@ -6,7 +6,7 @@
 <title>Wigmore: Explorable Evidence Charts</title>
 <meta name="description" content="Wigmore is a playground for Wigmorean evidence analysis. Create rigorous evidence charts, explore them visually, and share them with a link. Strict Wigmore structure, nothing else.">
 <meta name="theme-color" content="#0c0f0d">
-<meta name="build-version" content="v20260915-1550">
+<meta name="build-version" content="v20260916-0454">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -431,8 +431,14 @@ const LINES = {
 
 /* ---------- store ---------- */
 const LS_LIB="wigmore.lib.v1", LS_LAST="wigmore.last.v1";
-function libLoad(){ try{return JSON.parse(localStorage.getItem(LS_LIB))||[]}catch(e){return[]} }
-function libSave(l){ localStorage.setItem(LS_LIB, JSON.stringify(l)); }
+/* The library is parsed once per session and cached, so every currentData() /
+   getChart() call in a render pass (drawChart, fitView, frameSelection, ...)
+   sees the SAME object. layout() stamps _x/_y onto that object; without the
+   cache each call re-parsed localStorage and got a fresh object without _x,
+   so fitNodes computed NaN and the diagram rendered translate(NaN,NaN). */
+let _libCache=null;
+function libLoad(){ if(_libCache) return _libCache; try{ _libCache=JSON.parse(localStorage.getItem(LS_LIB))||[] }catch(e){ _libCache=[] } return _libCache; }
+function libSave(l){ _libCache=l; localStorage.setItem(LS_LIB, JSON.stringify(l)); }
 function uid(p){ return p+Math.random().toString(36).slice(2,8); }
 function blankChart(name){ return {name:name||"Untitled chart", nodes:[], links:[]}; }
 
@@ -838,9 +844,11 @@ function renderLibrary(){
       const cp=document.createElement("button"); cp.className="btn sm"; cp.textContent="Copy to my charts";
       cp.onclick=()=>{
         const lib=libLoad(); const id=uid("c");
-        const data=JSON.parse(JSON.stringify(EXAMPLE)); data.name=EXAMPLE.name.replace(" (example)","")+" (copy)";
+        const data=JSON.parse(JSON.stringify(EXAMPLE));
+        data.nodes.forEach(n=>{delete n._x;delete n._y;delete n._b;});
+        data.name=EXAMPLE.name.replace(" (example)","")+" (copy)";
         lib.unshift({id:id,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
-        localStorage.setItem(LS_LAST,id); go("chart",id);
+        renderLibrary(); toast("Copied to your charts");
       };
       row.appendChild(cp);
     }
@@ -1328,6 +1336,7 @@ function openBuild(id){
     else{
       const nid=uid("c");
       const data=JSON.parse(JSON.stringify(EXAMPLE)); data.name=copyName;
+      data.nodes.forEach(n=>{delete n._x;delete n._y;delete n._b;});
       lib.unshift({id:nid,name:data.name,updatedAt:Date.now(),data:data}); libSave(lib);
       id=nid;
     }
