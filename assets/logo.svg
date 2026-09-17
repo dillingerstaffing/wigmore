@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="32" cy="30" r="21" fill="none" stroke="#b8f34b" stroke-width="2.5"/>
-  <text x="32" y="38" text-anchor="middle" font-family="monospace" font-size="24" font-weight="600" fill="#f0f2eb">1</text>
-  <path d="M32 58 L32 52 M28 55 L32 51 L36 55" stroke="#a8afa5" stroke-width="2" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect x="0" y="0" width="512" height="512" fill="#ece6d5"/>
+  <line x1="88" y1="256" x2="424" y2="256" stroke="#241f17" stroke-width="6"/>
+  <circle cx="146" cy="256" r="50" fill="#ece6d5" stroke="#241f17" stroke-width="18"/>
+  <rect x="212" y="210" width="92" height="92" fill="#ece6d5" stroke="#241f17" stroke-width="18"/>
+  <polygon points="368,200.6 416,283.7 320,283.7" fill="#ece6d5" stroke="#8c3f22" stroke-width="18" stroke-linejoin="round"/>
 </svg>
