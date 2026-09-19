@@ -23,8 +23,8 @@ refuses lines that the schema does not allow (e.g. only a triangle can explain,
 inference lines conclude in circles, exactly one ultimate probandum).
 
 Schema sources: Wigmore (1913, 1937); the symbol key recovered by Jean Goodwin
-("Wigmore's Chart Method", Informal Logic, 2000); simplified conventions after
-Anderson (1999) and Anderson, Schum & Twining, Analysis of Evidence.
+("Wigmore's Chart Method", Informal Logic, 2000); simplified conventions after Anderson, Schum & Twining,
+Analysis of Evidence.
 
 Built by Chris Dillinger, freelance low-level C, RISC-V, and OS kernel systems
 programmer. Contact via the portfolio site: https://dillingerstaffing.github.io/portfolio/

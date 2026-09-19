@@ -16,7 +16,7 @@ try{
   document.documentElement.dataset.theme=(__t==='classic')?'classic':'notebook';
 }catch(_){ document.documentElement.dataset.theme='notebook'; }
 </script>
-<meta name="build-version" content="v20260917-0013">
+<meta name="build-version" content="v20260919-1920">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -433,7 +433,7 @@ body,header,.btn,.card,.panel,.key-card,.callout,input,select,textarea,.theme-to
     <div class="lib-head">
       <div>
         <div class="page-title">Evidence, charted.</div>
-        <div class="page-sub">Wigmore is a playground for Wigmorean evidence analysis: every claim numbered, every inference drawn, every chart shareable with a link. Strict Wigmore structure, nothing invented.</div>
+        <div class="page-sub">Wigmore is a playground for Wigmorean evidence analysis: every claim numbered, every inference drawn, every chart shareable with a link. Strict Wigmore structure, nothing added.</div>
       </div>
       <button class="btn primary" id="lib-new">+ New chart</button>
     </div>
@@ -532,7 +532,7 @@ body,header,.btn,.card,.panel,.key-card,.callout,input,select,textarea,.theme-to
     <div class="page-title">The schema.</div>
     <div class="page-sub">Wigmore's chart method has a fixed vocabulary: four shapes, four lines, a handful of marks. This page is the whole vocabulary. The builder enforces it; nothing else can be drawn.</div>
     <div class="key-grid" id="key-grid"></div>
-    <p class="hint" style="margin-top:18px">After J.H. Wigmore, <em>The Principles of Judicial Proof</em> (1913) and <em>The Science of Judicial Proof</em> (1937), via the key recovered by Jean Goodwin and the simplified conventions of Anderson (1999).</p>
+    <p class="hint" style="margin-top:18px">After J.H. Wigmore, <em>The Principles of Judicial Proof</em> (1913) and <em>The Science of Judicial Proof</em> (1937), via the key recovered by Jean Goodwin and the simplified conventions of Anderson and Twining's Analysis of Evidence.</p>
   </section>
 </main>
 
@@ -547,7 +547,7 @@ body,header,.btn,.card,.panel,.key-card,.callout,input,select,textarea,.theme-to
 "use strict";
 /* ================= Wigmore =================
    Strict schema after J.H. Wigmore (1913/1937), key via Goodwin,
-   simplified conventions via Anderson (1999). */
+   simplified conventions via Anderson and Twining's Analysis of Evidence. */
 
 /* ---------- schema ---------- */
 const SHAPES = {
