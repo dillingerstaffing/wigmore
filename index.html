@@ -16,7 +16,7 @@ try{
   document.documentElement.dataset.theme=(__t==='classic')?'classic':'notebook';
 }catch(_){ document.documentElement.dataset.theme='notebook'; }
 </script>
-<meta name="build-version" content="v20261025-0918">
+<meta name="build-version" content="v20261028-2120">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -1752,7 +1752,7 @@ function renderLinkForm(){
   const ts=mkSel("To","The conclusion it supports, refutes, or explains away.");
   d.nodes.forEach(n=>{ fs.appendChild(nodeOpt(n,d)); ts.appendChild(nodeOpt(n,d)); });
   if(d.nodes[1]) ts.selectedIndex=1;
-  const ty=mkSel("Line type","Each line means exactly one thing. Invalid pairings are rejected on save.");
+  const ty=mkSel("Line type","Each line means exactly one thing. Invalid pairings are rejected when you add the line.");
   Object.keys(LINES).forEach(k=>{ const o=document.createElement("option"); o.value=k;
     o.textContent=LINES[k].name+" \u00B7 "+LINES[k].guide; ty.appendChild(o); });
   const st=mkSel("Strength","Preliminary assessment while building: strong (doubled mark), neutral, or weak (?).");
