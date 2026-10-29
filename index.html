@@ -16,7 +16,7 @@ try{
   document.documentElement.dataset.theme=(__t==='classic')?'classic':'notebook';
 }catch(_){ document.documentElement.dataset.theme='notebook'; }
 </script>
-<meta name="build-version" content="v20261028-2120">
+<meta name="build-version" content="v20261029-0321">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -569,7 +569,7 @@ const ROLES = {
 const LINES = {
   inference:  {name:"Inference", guide:"Reasoning upward: the premises support the conclusion."},
   refutation: {name:"Refutation", guide:"A premise offered against a conclusion. Drawn as a vertical arrow marked with a circle."},
-  explanation:{name:"Explanation", guide:"An objection that explains away a conclusion or lessens its force. Hangs below-right of the conclusion, in the lane between ranks."},
+  explanation:{name:"Explanation", guide:"An objection that explains away a conclusion or lessens its force. Hangs below-right of the conclusion, between its row and the row below."},
   rebuttal:   {name:"Refutation of explanation", guide:"Refutes the explanation and corroborates the original conclusion. Chained below-right of the explanation, marked with a cross."}
 };
 
