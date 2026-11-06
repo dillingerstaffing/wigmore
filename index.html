@@ -16,7 +16,7 @@ try{
   document.documentElement.dataset.theme=(__t==='classic')?'classic':'notebook';
 }catch(_){ document.documentElement.dataset.theme='notebook'; }
 </script>
-<meta name="build-version" content="v20261103-0919">
+<meta name="build-version" content="v20261106-0320">
 <link rel="canonical" href="https://dillingerstaffing.github.io/wigmore/">
 <meta property="og:title" content="Wigmore: Explorable Evidence Charts">
 <meta property="og:description" content="Create, explore, and share Wigmorean evidence charts. Every shape numbered, every inference drawn, every chart shareable with a link.">
@@ -1755,7 +1755,7 @@ function renderLinkForm(){
   const ty=mkSel("Line type","Each line means exactly one thing. Invalid pairings are rejected when you add the line.");
   Object.keys(LINES).forEach(k=>{ const o=document.createElement("option"); o.value=k;
     o.textContent=LINES[k].name+" \u00B7 "+LINES[k].guide; ty.appendChild(o); });
-  const st=mkSel("Strength","Preliminary assessment while building: strong (doubled mark), neutral, or weak (?).");
+  const st=mkSel("Strength","Preliminary assessment while building: strong (heavier, in ink), neutral, or weak (dashed, marked ?).");
   ["strong","neutral","weak"].forEach(k=>{ const o=document.createElement("option"); o.value=k;
     o.textContent=k[0].toUpperCase()+k.slice(1); if(k==="neutral")o.selected=true; st.appendChild(o); });
   const cl=document.createElement("label"); cl.className="f"; cl.textContent="Composite group";
